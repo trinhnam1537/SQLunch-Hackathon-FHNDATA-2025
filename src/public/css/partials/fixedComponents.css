@@ -1,4 +1,4 @@
-.scroll-to-top-icon, .contact-icon, .chat-icon {
+.scroll-to-top-icon, .contact-icon, .chat-icon, .chatbot-icon {
   display: inline-block;
   margin-left: auto;
   margin-right: 0;
@@ -13,9 +13,10 @@
   animation: ring 1.5s infinite;
   i { font-size: 50px; color: #389845 };
 }
-.scroll-to-top-icon {bottom: 70px}
+.scroll-to-top-icon {bottom: 130px}
+.chatbot-icon {bottom: 70px}
 .chat-icon {bottom: 10px}
-.chat-box {
+.chat-box, .ai-chat-box {
   background-color: white;
   width: 300px;
   height: 400px;
