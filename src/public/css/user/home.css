@@ -1,0 +1,148 @@
+.flash-deal-board, .products-board, .vouchers-board  {
+  /* width: 100%; */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 20px;
+}
+.vouchers-board {
+  background: linear-gradient(168.12deg, #ffe0b2 0%, #ffcc80 100%); 
+  div.vouchers {
+    scroll-behavior: smooth;
+    align-items: center;
+    gap: 10px;
+    height: auto;
+    margin-top: 10px;
+    padding: 15px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(min(11.25rem, 100%), 1fr));
+    scroll-snap-type: x mandatory;
+    overflow-x: auto;
+    max-width: 100%;
+    border-radius: 20px;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    p {
+      margin-block-start: 10px;
+      margin-block-end: 5px;
+    }
+    a, p {
+      text-decoration: none; 
+      color: black;
+    }
+    .voucher {
+      /* scroll-snap-align: start; */
+      position: relative;
+      background-color: white; 
+      min-height: 150px;
+      max-width: 220px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      .loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background-color: white;
+        border-radius: 10px;
+        z-index: 2;
+        animation: flicker 1s infinite;
+      }
+      #name {
+        background-color: #389845;
+        color: white;
+        padding: 5px;
+        width: fit-content;
+        border-radius: 5px;
+        font-weight: bolder;
+      }
+      #description {
+        display: flex; 
+        height: 35px;
+        text-overflow: ellipsis; 
+        overflow: hidden;
+        word-wrap: break-word;
+        font-size: 14px;
+      } 
+      #code {
+        text-overflow: ellipsis; 
+        overflow: hidden;
+        white-space: nowrap;
+      }
+    };
+    .voucher:hover {
+      border-radius: 10px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+  }
+}
+.flash-deal-board {
+  background: linear-gradient(168.12deg, #a8e6cf 0%, #56ab2f 100%);
+  .title {
+    i.fi-sr-bolt, a {
+      animation: bling 1s infinite
+    }
+  }
+}
+.products-board {
+  background-color: white;
+}
+.famous-brand-board {
+  overflow: hidden;
+  margin-top: 20px;
+  position: relative;
+  /* margin: auto; */
+  justify-content: center;
+  background: linear-gradient(145deg, #e0fdfa 0%, #b2ebf2 100%);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 20px;
+  padding: 15px;
+  .brands {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .inner {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
+    animation: loop 10s linear infinite;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: white;
+    box-sizing: border-box;
+    img {
+      height: 100px;
+    }
+    a { 
+      text-decoration: none; 
+      color: black;
+      width: max-content;
+    }
+  }
+  .fade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+}
+@keyframes bling {
+  0% {color: white;}
+  50% {color: yellow;}
+  100% {color: white;}
+}
+@keyframes loop {
+  0% { transform: translateX(0) }
+  100% { transform: translateX(-50%) }
+}

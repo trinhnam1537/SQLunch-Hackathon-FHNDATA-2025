@@ -1,0 +1,40 @@
+.detail-voucher-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  .title {
+    width: 90%;
+    background-color: white;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: larger;
+    font-weight: bolder;
+    height: 50px;
+  }
+  table {
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    td.name-group {
+      display: flex;
+      gap: 5px;
+    }
+    a { 
+      display: flex;
+      align-items: center;
+      text-decoration: none; 
+      color: black;
+      padding-left: 0 !important;
+      border: none;
+      background-color: transparent !important
+    }
+    a:hover {
+      color: black;
+    }
+  }
+}

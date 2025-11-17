@@ -1,0 +1,100 @@
+.detail-brand-container {
+  width: 100%;
+  height: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px 0;
+  gap: 20px;
+  .table {
+    width: 90%;
+    height: fit-content ;
+    background-color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  .image-box {
+    display: flex;
+    align-items: center;
+    width: 50%;
+    height: 100%;
+    .thumbnails {
+      border-radius: 5px;
+      width: 50px;
+      height: 90%;
+      margin-left: 10px;
+      display: grid;
+      img {
+        max-width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 5px;
+        cursor: pointer;
+        border: 1px solid white;
+      }
+      img:hover {
+        border: 1px solid red;
+      }
+    }
+    .image {
+      border-radius: 5px;
+      width: 400px;
+      aspect-ratio: 1/1;
+      margin-left: 20px;
+      img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 5px;
+      }
+    }
+  }
+  .details-box {
+    width: 50%;
+    height: 100%;
+    margin: 10px;
+    #title {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      gap: 5px;
+      h1, h3, h4 {
+        width: fit-content;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        padding: 5px 0;
+      }
+      h1 {
+        color: #c73030;
+      }
+    }
+    #description {
+      width: 100%;
+      height: 40%;
+      text-overflow: ellipsis; 
+      overflow: hidden;
+      word-wrap: break-word;
+    }
+  }
+  .more-details {
+    width: 90%;
+    background-color: white;
+    border-radius: 10px;
+    align-items: center;
+    white-space: pre-line;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    h3 {
+      padding: 5px;
+      margin-block-start: 0;
+      margin-block-end: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    p {
+      padding: 0px 15px;
+    }
+  }
+}

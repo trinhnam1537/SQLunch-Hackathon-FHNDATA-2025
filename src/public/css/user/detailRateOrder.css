@@ -1,0 +1,22 @@
+.detail-rate-order-container {
+  td.name-group {
+    display: flex;
+    gap: 5px;
+  }
+  a { 
+    display: flex;
+    align-items: center;
+    text-decoration: none; 
+    color: black;
+    padding-left: 0 !important;
+    border: none;
+    background-color: transparent !important
+  }
+  .rate-star {
+    padding: 5px;
+    i { cursor: pointer}
+  }
+  a:hover {
+    color: black;
+  }
+}

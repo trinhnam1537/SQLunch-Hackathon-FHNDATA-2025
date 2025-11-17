@@ -1,0 +1,127 @@
+<div class="advertise-board">
+  {{> userAdvertise}}
+</div>
+
+<div class="vouchers-board" id="voucher" style="display: none;">
+  <div class="title" data-tippy-content="Voucher dành riêng cho bạn">
+    <i class="fi fi-sr-bolt"></i>
+    <div><a href="/" class="main-title"><b>VOUCHER DÀNH RIÊNG CHO BẠN</b></a></div>
+  </div>
+  
+  <div class="vouchers">
+    {{#each (holderData 5)}}
+      {{> voucher}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="favorite" style="display: none;">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm">
+    <i class="fi fi-sr-flame"></i>
+    <div><a href="/all-products" class="main-title"><b>SẢN PHẨM CÓ THỂ BẠN SẼ THÍCH</b></a></div>
+  </div>
+
+  <div class="products">
+    {{#each (holderData 10)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="flash-deal-board" id="flash-deal">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm đang sale">
+    <i class="fi fi-sr-bolt"></i>
+    <div><a href="/all-products/status/flash-sale" class="main-title"><b>SẢN PHẨM FLASH DEAL</b></a></div>
+  </div>
+  
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="top-sale">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm bán chạy">
+    <i class="fi fi-sr-trophy-star"></i>
+    <div><a href="/all-products?saleNumber=-1" class="main-title"><b>SẢN PHẨM BÁN CHẠY</b></a></div>
+  </div>
+  
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="hot-sale">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm đang hot">
+    <i class="fi fi-sr-flame"></i>
+    <div><a href="/all-products/status/hot" class="main-title"><b>SẢN PHẨM HOT</b></a></div>
+  </div>
+  
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="skincare">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm skincare">
+    <i class="fi fi-sr-spray-can"></i>
+    <div><a href="/all-products/categories/skincare" class="main-title"><b>SẢN PHẨM SKINCARE</b></a></div>
+  </div>
+  
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="makeup">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm makeup">
+    <i class="fi fi-sr-lipstick"></i>
+    <div><a href="/all-products/categories/makeup" class="main-title"><b>SẢN PHẨM MAKEUP</b></a></div>
+  </div>
+  
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="products-board" id="all">
+  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm">
+    <i class="fi fi-sr-flame"></i>
+    <div><a href="/all-products" class="main-title"><b>TOÀN BỘ SẢN PHẨM</b></a></div>
+  </div>
+
+  <div class="products">
+    {{#each (holderData 5)}}
+      {{> product}}
+    {{/each}}
+  </div>
+</div>
+
+<div class="famous-brand-board" id="brand">
+  <div class="title" data-tippy-content="Xem toàn bộ thương hiệu">
+    <i class="fi fi-rr-brand"></i>
+    <div><a href="/all-brands" class="main-title"><b>THƯƠNG HIỆU NỔI BẬT</b></a></div>
+  </div>
+
+  <div class="brands">
+    <div class="inner">
+      {{#each (holderData 15)}}
+      <a class="brand">
+        <img loading="lazy">
+      </a>
+      {{/each}}
+    </div>
+    <div class="fade"></div>
+  </div>
+</div>
+
+<script src="/js/user/home.js"></script>

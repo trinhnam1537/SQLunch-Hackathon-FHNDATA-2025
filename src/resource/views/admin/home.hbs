@@ -1,0 +1,66 @@
+<div class="admin-home-container">
+  <div class="date-filter">
+    <input type="date" id="start-date">
+    <input type="date" id="end-date">
+    <button title="submit" type="submit">Xem</button>
+  </div>
+  
+  <div class="table">
+    <div class="finance"></div>
+  </div>
+
+  <div class="table">
+    <div class="order"></div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+      <div style="width: 70%;"><canvas id="order"></canvas></div>
+      <div style="width: 30%;"><canvas id="order-status"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table">
+    <div class="customer"></div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+      <div style="width: 30%;"><canvas id="customer-membership"></canvas></div>
+      <div style="width: 70%;"><canvas id="customer"></canvas></div>
+    </div>
+  </div> 
+  
+  <div class="table">
+    <div class="employee"></div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+      <div style="width: 70%;"><canvas id="employee"></canvas></div>
+      <div style="width: 30%;"><canvas id="employee-role"></canvas></div>
+    </div>
+  </div> 
+  
+  <div class="table">
+    <div class="product"></div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+      <div style="width: 30%;"><canvas id="product-category"></canvas></div>
+      <div style="width: 70%;"><canvas id="product"></canvas></div>
+    </div>
+  </div> 
+
+  <div class="tables">
+    {{!-- <div class="table">
+      <div class="purchase"></div>
+      <div><canvas id="purchase"></canvas></div>
+    </div>  --}}
+
+    <div class="table">
+      <div class="supplier"></div>
+      <div><canvas id="supplier"></canvas></div>
+    </div>
+
+    {{!-- <div class="table">
+      <div class="brand"></div>
+    </div>  --}}
+
+    <div class="table">
+      <div class="store"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="/js/admin/home.js"></script>

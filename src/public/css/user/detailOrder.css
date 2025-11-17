@@ -1,0 +1,113 @@
+.detail-order-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  .title {
+    width: 90%;
+    background-color: white;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: larger;
+    font-weight: bolder;
+    height: 50px;
+  }
+  table {
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    td.name-group {
+      display: flex;
+      gap: 5px;
+    }
+    a { 
+      display: flex;
+      align-items: center;
+      text-decoration: none; 
+      color: black;
+      padding-left: 0 !important;
+      border: none;
+      background-color: transparent !important
+    }
+    a:hover {
+      color: black;
+    }
+  }
+}
+.update-order-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(600px, 90%);   /* prevent too wide on desktop, responsive on mobile */
+  background-color: #fff;
+  border: 2px solid #5ab868;
+  border-radius: 12px;
+  max-height: 80%;          /* allow scroll if text overflows */
+  overflow-y: auto;
+  z-index: 2000;            /* higher z-index to ensure it’s above everything */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* let content align naturally */
+  padding: 20px;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: fadeInScale 0.3s ease-out; /* smooth entrance */
+}
+.order-successfully-message i {
+  color: #28a745;
+  font-size: 60px;
+  margin-bottom: 10px;
+}
+.order-successfully-message h3 {
+  text-align: center;
+  margin: 5px 0;
+  color: #333;
+}
+.order-successfully-message h5 {
+  text-align: center;
+  font-style: italic;
+  margin: 0;
+  color: #555;
+}
+.order-successfully-message a {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #5ab868;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+.order-successfully-message a:hover {
+  background: #4aa157;
+}
+
+.update-order-message h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+.update-order-message .actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.update-order-message .deletebtn {
+  background: #f44336;
+  color: #fff;
+  width: 100px;
+  border: 1px solid #f44336;
+}
+.update-order-message .confirmbtn {
+  background: #5ab868;
+  color: #fff;
+  width: 100px;
+  border: 1px solid #5ab868;
+}

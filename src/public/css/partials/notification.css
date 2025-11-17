@@ -1,0 +1,98 @@
+.admin-notification {
+  position: fixed;
+  z-index: 999;
+  top: 5px;
+  right: 10px;
+  bottom: auto;
+  left: auto;
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  background-color: white;
+  border-radius: 50%;
+  border: 1px solid #5ab868;
+  padding: 10px;
+  .unread-quantity {
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    right: 0;
+    padding: 5px 10px;
+    border-radius: 50%;
+    background-color: #389845;
+    color: white;
+  }
+  i {
+    position: absolute;
+    color: #5ab868;
+    top: 3px;
+    right: 3px;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 10px;
+  }
+}
+
+.notification-box {
+  position: fixed;
+  z-index: 999;
+  top: 5px;
+  right: 85px;
+  bottom: auto;
+  left: auto;
+  width: 500px;
+  height: 300px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #5ab868;
+  .box-header {
+    border-radius: 10px;
+    top: 0;
+    height: 50px;
+    background-color: #5ab868;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    i, span { color: white; font-size: 30px; cursor: pointer;}
+  }
+  .box-content {
+    overflow-y: scroll;
+    height: 250px;
+    margin-top: 5px;
+    .notification-details {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    img {
+      width: 15%;
+      aspect-ratio: 1/1;
+    }
+    a {
+      width: 85%;
+      text-decoration: none;
+      color: black;
+    }
+  }
+  .notification-details.unread {
+    background-color: #e5e5e5;
+  }
+  }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .box-content::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .box-content {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}

@@ -1,0 +1,29 @@
+<div class="detail-brand-container">
+  <div class="table">
+    <div class="image-box">
+      <div class="image"><img loading="lazy"/></div>
+    </div>
+    
+    <div class="details-box">
+      <h1 id="title"></h1>
+      <p id="description"></p>
+    </div>
+  </div>
+
+  <div class="more-details">
+    <h3>THÔNG TIN THƯƠNG HIỆU</h3>
+    <p id="details"></p>
+  </div>
+
+  <div class="related-products">
+    <div class="title"><span class="main-title"><b>SẢN PHẨM</b></span></div>
+
+    <div class="products">
+    {{#each holderRelatedProducts}}
+      {{> product}}
+    {{/each}}
+    </div>
+  </div>
+</div>
+
+<script src="/js/user/detailBrand.js"></script>

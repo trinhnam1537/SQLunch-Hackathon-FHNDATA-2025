@@ -1,0 +1,56 @@
+<div class="admin-create-purchase-container">
+  <div id="form">
+    <div class="form-title"><p>Thêm đơn nhập mới</p></div>
+
+    <div class="form-group">
+      <label for="purchaseDate">Ngày nhập *</label>
+      <input type="date" id="purchaseDate" name="purchaseDate">
+    </div>
+
+    <div class="form-group">
+      <label for="supplierId">Chọn nhà cung cấp</label>
+      <select name="supplierId" id="supplierId">
+        <option value="" selected disabled>-- Nhà cung cấp --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="note">Ghi chú</label>
+      <input type="text" id="note" name="note">
+    </div>
+
+    <div class="form-group">
+      <label>Chọn nguyên liệu</label>
+      <input type="text"  id="product-search" placeholder="Nhập tên nguyên liệu">
+    </div>
+
+    <div class="products-match"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <td style="width:  5%;">STT</td>
+          <td style="width: 40%;">Sản Phẩm</td>
+          <td style="width: 15%; text-align:right">Đơn Giá</td>
+          <td style="width: 10%;">Số Lượng</td>
+          <td style="width: 15%; text-align:right">Tổng Tiền</td>
+          <td style="width: 10%;"></td>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: right">0</td>
+        <td></td>
+      </tfoot>
+    </table>  
+
+    <div class="submit-button"><button title="submit" type="submit">Hoàn thành</button></div>
+  </div>
+</div>
+
+<script src="/js/admin/create/purchase.js"></script>

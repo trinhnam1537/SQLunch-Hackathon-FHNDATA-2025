@@ -1,0 +1,105 @@
+<div class="product-details-container">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">THÔNG TIN SẢN PHẨM</td></tr>
+      </thead>
+      <tr>
+        <td>Id sản phẩm</td>
+        <td><input type="text" id="id" disabled></td>
+      <tr>
+      <tr>
+        <td>Loại Sản Phẩm</td>
+        <td>
+          <select name="categories" id="categories">
+            <option value="skincare">Skincare</option>
+            <option value="makeup">Makeup</option>
+          </select>
+          <select name="skincare" id="skincare" style="display: none">
+            <option value="xit-khoang">Xịt Khoáng</option>
+            <option value="mat-na">Mặt Nạ</option>
+            <option value="serum">Serum</option>
+            <option value="bha">BHA</option>
+            <option value="tay-da-chet">Tẩy Da Chết</option>
+            <option value="duong-da">Dưỡng Da</option>  
+            <option value="toner">Toner</option>
+            <option value="nuoc-tay-trang">Nước Tẩy Trang</option>
+            <option value="cham-mun">Chấm Mụn</option>
+            <option value="kem-duong-am">Kem Dưỡng Ẩm</option>
+            <option value="sua-rua-mat">Sữa Rửa Mặt</option>
+          </select>
+          <select name="makeup" id="makeup" style="display: none">
+            <option value="phan-ma">Phấn Má</option>
+            <option value="mascara">Mascara</option>
+            <option value="ke-mat">Kẻ Mắt</option>
+            <option value="kem-chong-nang">Kem Chống Nắng</option>
+            <option value="che-khuyet-diem">Che Khuyết Điểm</option>
+            <option value="son">Son</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Hãng</td>
+        <td><select name="brand" id="brand"></select></td>
+      <tr>
+        <td>Tên</td>
+        <td><input type="text" id="name"></td>
+      </tr>
+      <tr>
+        <td>Giá nhập</td>
+        <td><input type="text" id="purchasePrice"></td>
+      </tr>
+      <tr>
+        <td>Giá bán cũ</td>
+        <td><input type="text" id="oldPrice"></td>
+      </tr>
+      <tr>
+        <td>Giá bán mới</td>
+        <td><input type="text" id="price"></td>
+      </tr>
+      <tr>
+        <td>Mô tả</td>
+        <td><input type="text" id="description"></td>
+      </tr>
+      <tr>
+        <td>Chi tiết</td>
+        <td><input type="text" id="details"></td>
+      </tr>
+      <tr>
+        <td>HDSD</td>
+        <td><input type="text" id="guide"></td>
+      </tr>
+      <tr>
+        <td>Số lượng</td>
+        <td><input type="text" id="quantity"></td>
+      </tr>
+      <tr>
+        <td>Đánh giá</td>
+        <td><input type="text" id="rate" disabled></td>
+      </tr>
+      <tr>
+        <td>Lượt bán</td>
+        <td><input type="text" id="saleNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Lượt đánh giá</td>
+        <td><input type="text" id="rateNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Tình trạng sản phẩm</td>
+        <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Ảnh sản phẩm</td>
+        <td>
+          <img src="" alt="loading" id="image">
+          <input type="file" name="img" id="img"/>
+        </td>
+      </tr>
+    </table>
+    
+    <div class="submit-button"><button title="submit" type="submit">Cập nhật</button></div> 
+  </div>
+</div>
+
+<script src="/js/admin/detail/product.js"></script>

@@ -1,0 +1,227 @@
+@import url('https://cdn-uicons.flaticon.com/2.0.0/uicons-regular-straight/css/uicons-regular-straight.css');
+@import url('https://cdn-uicons.flaticon.com/2.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.1.0/uicons-thin-rounded/css/uicons-thin-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.1.0/uicons-bold-rounded/css/uicons-bold-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-rounded/css/uicons-solid-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
+@import url('https://cdn-uicons.flaticon.com/3.0.0/uicons-brands/css/uicons-brands.css');
+
+body {
+  max-width: 1300px;
+  margin: auto;
+}
+header {
+  max-width: 1300px;
+  margin: auto;
+}
+main {
+  margin-top: 80px; 
+  margin-bottom: 50px;
+  padding: 0 10px;
+}
+div.title {
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 8px; 
+  margin: 20px 0;
+}
+
+div.title i {
+  color: #389845; 
+  font-size: 28px; 
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+div.title i:hover {
+  transform: scale(1.2);
+  color: #2d6a4f;
+}
+
+div.title .main-title {
+  display: inline-block;
+  position: relative;
+  color: #389845;
+  text-decoration: none;
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+div.title .main-title::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 3px;
+  bottom: -3px;
+  left: 0;
+  background-color: #389845;
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+div.title .main-title:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+div.products {
+  scroll-behavior: smooth;
+  align-items: center;
+  gap: 10px;
+  height: auto;
+  margin-top: 10px;
+  padding: 15px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(min(11.25rem, 100%), 1fr));
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 20px;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+div.products a, p {
+  text-decoration: none; 
+  color: black
+}
+div.products .product {
+  position: relative;
+  background-color: white; 
+  min-height: 350px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+div.products .product img {
+  max-width: 100%; 
+  aspect-ratio: 1 / 1; 
+  border-radius: 8px;
+  transition: transform 0.3s ease-in-out;
+}
+
+div.products .product #name {
+  display: flex; 
+  align-items: center;
+  margin: 10px 0 5px;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis; 
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+div.products .product #price {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #5ab868;
+  color: #5ab868;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+div.products .product:hover {
+  transform: translateY(-5px);
+  border-color: #389845;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+div.products .product:hover #price {
+  background-color: #5ab868;
+  color: white;
+}
+
+div.products .product:hover img {
+  transform: scale(1.08);
+}
+
+/* subtle loading shimmer effect */
+div.products .product .loading {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e5e5e5 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+div.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+table {
+  width: 100%;
+  border-spacing: 0px 10px;
+  padding: 0px 5px;
+  border-radius: 10px;
+  thead {
+    background: linear-gradient(135deg, #389845, #56c47b);
+    height: 50px;
+    font-weight: bolder;
+    text-align: center;
+    text-transform:capitalize;
+    color: white;
+  }
+  tfoot {
+    background: linear-gradient(135deg, #389845, #56c47b);
+    height: 50px;
+    font-weight: bolder;
+    color: white;
+  }
+  tbody {
+    tr:nth-child(odd) {
+      background-color: #f2f2f2;
+      height: 50px;
+    }
+    td {
+      height: fit-content;
+      /* border-bottom: 1px solid black; */
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    a {
+      width: fit-content; 
+      height: 30px;
+      background-color: white;
+      color: #389845;
+      border: 1px solid #389845;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      padding: 5px;
+    }
+    a:hover {
+      background-color: #389845;
+      color: white;
+    }
+    img {
+      border-radius: 10px;
+      width: 40px;
+      aspect-ratio: 1/1;
+    }
+  }
+  td:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  td:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+}

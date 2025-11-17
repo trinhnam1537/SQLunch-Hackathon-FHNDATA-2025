@@ -1,0 +1,115 @@
+<div class="admin-all-products-container">  
+  <div class="header">
+    <div class="board-title">
+      <p>Sản phẩm:</p>
+      <p class="trash"><a href="/admin/all-products/trash">Đã xoá</a></p>
+    </div>
+
+    <div class="date-filter">
+      <input type="date" id="start-date">
+      <input type="date" id="end-date">
+      <button title="submit" type="submit">Xem</button>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <div class="search">
+      <select id="search-type" class="search-btn">
+        <option value="">Tìm kiếm theo</option>
+        <option value="_id" selected>ID</option>
+        <option value="name">Tên</option>
+        <option value="brand">Thương hiệu</option>
+      </select>
+      <input type="text" id="search-input" name="name" placeholder="Tìm kiếm sản phẩm" />
+    </div>
+
+    <div class="sort-filter">
+      <div class="sort">
+        <label>Sắp xếp:</label>
+        <select id="price" class="filter-btn">
+          <option value="">Giá</option>
+          <option value="1">Giá cao - thấp</option>
+          <option value="-1">Giá thấp - cao</option>
+        </select>
+        <select id="rate" class="filter-btn">
+          <option value="">Đánh giá</option>
+          <option value="1">Đánh giá cao - thấp</option>
+          <option value="-1">Đánh giá thấp - cao</option>
+        </select>
+        <select id="saleNumber" class="filter-btn">
+          <option value="">Lượng bán</option>
+          <option value="1">Lượng bán cao - thấp</option>
+          <option value="-1">Lượng bán thấp - cao</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Lọc:</label>
+        <select id="categories" class="filter-btn">
+          <option value="">Loại sản phẩm</option>
+          <option value="skincare">Skincare</option>
+          <option value="makeup">Makeup</option>
+        </select>
+        <select id="brand" class="filter-btn">
+          <option value="">Thương hiệu</option>
+        </select>
+        <button id="clear-sort-filter" style="display: none">Xoá bộ lọc</button>
+      </div>
+    </div>
+
+    <a href="/admin/all-products/product/create" target="_blank" rel="noopener noreferrer" class="create-btn" id="create-btn">
+      <i class="fi fi-rr-plus"></i>
+      <span>Thêm Sản Phẩm</span>
+    </a>
+  </div>
+
+  <div class="table">
+    {{> exportFileButton}}
+    <table class="all-items">
+      <thead>
+        <tr>
+          <td style="width:  5%">STT     </td>
+          <td style="width: 10%">Hãng    </td>
+          <td style="width: 30%">Tên     </td>
+          <td style="width: 15%">Giá cũ  </td>
+          <td style="width: 15%">Giá hiện tại </td>
+          <td style="width: 10%">Tồn kho </td>
+          <td style="width: 15%">Thao tác</td>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each (holderData 10)}}
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>  
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <div id="id01" class="modal">
+      <form class="modal-content">
+        <div class="container">
+          <p><strong>Xoá sản phẩm ?</strong></p>
+          <p id="confirm-message"></p>
+          <div class="clearfix">
+            <button id="delete-button" type="button" class="deletebtn">Xoá</button>
+            <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Huỷ</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <span class="pagination"></span>
+</div>
+
+<form style="display: none;" name="delete-form" method="post"></form>
+
+<script type="module" src="/js/admin/all/product.js"></script>

@@ -1,0 +1,19 @@
+@media screen and (max-width: 700px) {
+  .admin-trash-products-container { 
+    .board-title {
+      p { font-size: 25px;}
+    }
+    tbody, thead {
+      td:nth-child(1) { display: none;}
+      td:nth-child(2) {
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+      }
+      td:nth-child(4) { display: none;}
+      td:nth-child(5) { display: none;}
+    }
+    .modal-content {
+      width: 80% !important;
+    }
+  } 
+}
