@@ -1,0 +1,123 @@
+.admin-sidebar-container {
+  left: 5px;
+  right: auto;
+  width: 210px;
+  height: 98%;
+  z-index: 3;
+  position: fixed;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fdf9 100%);
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid #38984533;
+  box-shadow: 0 4px 12px rgba(56, 152, 69, 0.15);
+  transition: width 0.3s ease-in-out;
+
+  /* hide scrollbar */
+  -ms-overflow-style: none;  
+  scrollbar-width: none; 
+}
+.admin-sidebar-container::-webkit-scrollbar { display: none; }
+
+/* resize button */
+.admin-sidebar-container .resize-button {
+  position: relative;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
+  width: 50px;
+  height: 50px;
+}
+.admin-sidebar-container .resize-button i {
+  font-size: 28px;
+  color: #389845;
+  transition: transform 0.3s ease;
+}
+.admin-sidebar-container .resize-button:hover i {
+  transform: rotate(180deg);
+}
+
+/* account section */
+.admin-sidebar-container .admin-account {
+  margin: 0 10px;
+  border-radius: 8px;
+  background-color: #e9f7ec;
+  color: #389845;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 75px;
+  transition: background 0.3s ease;
+}
+.admin-sidebar-container .admin-account:hover {
+  background-color: #d9f2de;
+}
+.admin-sidebar-container .admin-account img {
+  width: 50px;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  border: 2px solid #389845;
+}
+.admin-sidebar-container .admin-account p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+}
+/* buttons */
+.admin-sidebar-container .admin-button {
+  padding: 0px 8px;
+}
+.admin-sidebar-container .admin-button .sidebar-button {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  text-transform: capitalize;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 0 12px;
+  transition: all 0.25s ease-in-out;
+}
+.admin-sidebar-container .admin-button .sidebar-button i {
+  font-size: 20px;
+  color: #389845;
+  transition: color 0.25s ease;
+}
+
+/* hover/active states */
+.admin-sidebar-container .admin-button .sidebar-button:hover {
+  background-color: #5ab868;
+  color: white;
+  transform: translateX(5px);
+}
+.admin-sidebar-container .admin-button .sidebar-button:hover i {
+  color: white;
+}
+.admin-sidebar-container .admin-button .sidebar-button.active {
+  background-color: #389845;
+  color: white;
+}
+.admin-sidebar-container .admin-button .sidebar-button.active i {
+  color: white;
+}
+
+/* small mode */
+.admin-sidebar-container.small {
+  width: 70px;
+}
+.admin-sidebar-container.small p {
+  display: none;
+}
+.admin-sidebar-container.small .admin-button .sidebar-button {
+  justify-content: center;
+  padding: 0;
+}
+.admin-sidebar-container.small .admin-button .sidebar-button i {
+  margin: 0;
+  padding: 0;
+}

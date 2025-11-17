@@ -1,0 +1,16 @@
+<div class="user-all-brands-container">
+  <div class="title">
+    <i class="fi fi-sr-flame"></i>
+    <div class="main-title" style="text-transform:uppercase"><b>Toàn bộ thương hiệu</b></div>
+  </div>
+  
+  <div class="all-brands">
+    {{#each (holderData 8)}}
+      <div class="brand loading">
+        <a><img loading="lazy"/></a>
+      </div>
+    {{/each}}
+  </div>
+</div>
+
+<script src="/js/user/allBrands.js"></script>

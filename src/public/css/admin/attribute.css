@@ -1,0 +1,34 @@
+.admin-attribute-container {
+  padding: 0 5px;
+  gap: 10px;
+  div.table {
+    margin-bottom: 10 !important;
+    min-height: 400px;
+    tbody {
+      tr {
+        height: 50px;
+        td {
+          padding: 10px;
+          text-align: center;
+          box-sizing: border-box;
+        }
+        td:nth-last-child(2) {
+          position: relative;
+          button {
+            position: absolute;
+            right: 10px;
+            left: auto;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        }
+      }
+    }
+  }
+  
+}
+@media screen and (max-width: 700px) {
+  .admin-home-container {
+    .info-table {grid-template-columns: auto !important}
+  }
+}

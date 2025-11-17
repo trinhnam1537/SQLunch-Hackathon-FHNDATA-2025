@@ -1,0 +1,53 @@
+<div class="admin-create-voucher-container">
+  <div id="form">
+    <div class="form-title">
+      <p>Thêm Voucher mới</p>
+    </div>
+
+    <div class="form-group">
+      <label for="name">Tên Voucher *</label>
+      <input type="text" class="form-control" id="name" name="name" placeholder="VD: Giảm giá 20%">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Mô tả *</label>
+      <input type="text" class="form-control" id="description" name="description" placeholder="VD: Giảm giá 20% cho đơn hàng từ 1.000.000">
+    </div>
+
+    <div class="form-group">
+      <label></label>
+      <select name="memberCode" id="memberCode">
+        <option value="" selected disabled>-- Chọn hạng thành viên --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="discount">Phần trăm chiết khấu (%) *</label>
+      <input type="text" class="form-control" id="discount" name="discount" placeholder="VD: 1.000.000">
+    </div>
+
+    <div class="form-group">
+      <label for="maxDiscount">Giá trị chiết khấu tối đa *</label>
+      <input type="text" class="form-control" id="maxDiscount" name="maxDiscount" placeholder="VD: 1.000.000">
+    </div>
+
+    <div class="form-group">
+      <label for="minOrder">Giá trị đơn hàng áp dụng *</label>
+      <input type="text" class="form-control" id="minOrder" name="minOrder" placeholder="VD: 1.000.000">
+    </div>
+
+    <div class="form-group">
+      <label for="start-date">Ngày bắt đầu*</label>
+      <input type="date" id="start-date">
+    </div>
+
+    <div class="form-group">
+      <label for="end-date">Ngày kết thúc*</label>
+      <input type="date" id="end-date">
+    </div>
+
+    <div class="submit-button"><button title="submit" type="submit">Hoàn thành</button></div>
+  </div>
+</div>
+
+<script src="/js/admin/create/voucher.js"></script>

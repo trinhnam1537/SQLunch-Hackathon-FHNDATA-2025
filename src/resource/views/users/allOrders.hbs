@@ -1,0 +1,107 @@
+<div class="all-orders-container">
+  <div class="cart">
+    <p><i class="fi fi-rs-shopping-cart-check"></i>Giỏ Hàng</p>
+
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <td style="width: 5%;"></td>
+            <td style="width: 10%;"></td>
+            <td style="width: 40%;">Sản Phẩm</td>
+            <td style="width: 15%;">Đơn Giá</td>
+            <td style="width: 10%;">Số Lượng</td>
+            <td style="width: 15%;">Tổng Tiền</td>
+            <td style="width: 5%;"></td>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <td colspan="5">Tổng</td>
+          <td class="total" style="text-align: right;"></td>
+          <td></td>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="voucher">
+    <p>Mã giảm giá</p>
+
+    <div class="voucher-input">
+      <button style="width: fit-content;" class="voucher-list-button">Danh sách mã giảm giá</button>
+      <input type="text" placeholder="Nhâp mã giảm giá" id="voucher-code" name="voucher-code">
+      <button style="width: fit-content;" class="voucher-submit-button">Áp dụng</button>
+    </div>
+
+    <div class="price">
+      <div class="old-price">
+        <span class="old-price-text">Giá cũ: </span>
+        <span class="old-price-value"></span>
+      </div>
+      <div class="new-price">
+        <span class="new-price-text">Giá mới: </span>
+        <span class="new-price-value"></span>
+      </div>
+    </div>
+
+    <div><span class="form-message"></span></div>
+  </div>
+
+  <div class="contact-info">
+    <p><i class="fi fi-rs-user-check"></i>Thông Tin Khách Hàng</p>
+
+    <div class="info">
+      <div class="form-group">
+        <label for="name">Tên Khách Hàng *</label>
+        <input type="text" id="name" name="name">
+        <span class="form-message"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Số Điện Thoại *</label>
+        <input type="text" id="phone" name="phone">
+        <span class="form-message"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="address">Địa Chỉ Nhận Hàng *</label>
+        <input type="text" id="address" name="address">
+        <span class="form-message"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="note">Ghi Chú</label>
+        <input type="text" id="note" name="note">
+      </div>
+    </div> 
+  </div>
+
+  <div class="payment-method">
+    <p><i class="fi fi-rr-credit-card"></i>Hình Thức Thanh Toán</p>
+
+    <div class="form-group">
+      <input type="radio" id="cash" name="paymentMethod" value="cash" checked>
+      <label for="cash">Thanh toán khi nhận hàng</label><br>
+
+      <input type="radio" id="e-wallet" name="paymentMethod" value="e-wallet">
+      <label for="e-wallet">Ví điện tử Momo</label><br>
+
+      <input type="radio" id="transfer" name="paymentMethod" value="transfer">
+      <label for="transfer">Chuyển Khoản</label>
+
+      <div class="bank-account">
+        <img src="https://res.cloudinary.com/bunny-store/image/upload/v1711070720/web-img/fc4c4fd10517a949f006_ndjvt6.png" alt="loading" loading="lazy">
+        <div class="form-group">
+          <label>Sau khi chuyển khoản xong mọi người chụp bill gửi cho mình nha</label>
+          <input type="file" name="img" id="img"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="button"><button class="submit-button" style="display: none;">Hoàn tất đặt hàng</button></div>
+  <div class="button"><button class="next-button">Tiếp tục</button></div>
+</div>
+
+<script src="/js/user/allOrders.js"></script>

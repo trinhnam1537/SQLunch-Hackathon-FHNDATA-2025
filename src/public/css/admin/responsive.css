@@ -1,0 +1,87 @@
+/*  layout */
+@media screen and (max-width: 800px) {
+  main {margin-left: 70px;}
+}
+
+/*  notification */
+@media screen and (max-width: 800px) {
+  .notification-box {
+    left: 0 !important;
+    right: 85px !important;
+    width: auto !important;
+  }
+}
+
+/*  home */
+@media screen and (max-width: 800px) {
+  .admin-home-container {
+    div.tables {
+      grid-template-columns: 1fr !important
+    }
+  }
+}
+
+/* all items */
+@media screen and (max-width: 800px) {
+  .control-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch !important;
+  }
+  .control-bar .filter-and-create {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px;
+    padding: 0px !important;
+  }
+  .control-bar .sort,
+  .control-bar .filter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .control-bar #search-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .control-bar #create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .control-bar #clear-filter {
+    align-self: flex-start;
+  }
+  .table .table-button {
+    justify-content: flex-start !important;
+  }
+}
+
+/*  attribute */
+@media screen and (max-width: 800px) {
+  .admin-attribute-container {
+    grid-template-columns: 1fr !important
+  }
+}
+
+/*  chat */
+@media screen and (max-width: 800px) {
+  .admin-all-chats-container {
+    display: block !important;
+  }
+  .chat-sidebar, .chat-body {
+    width: 100% !important;
+  }
+  .chat-sidebar {
+    height: 300px !important;
+    overflow-y: scroll;
+    .chat-search {
+      height: 50px !important;
+    }
+  }
+  .chat-body {
+    margin-top: 5px;
+    height: calc(100vh - 310px) !important;
+  }
+}

@@ -1,0 +1,61 @@
+<div class="admin-all-products-container">  
+  <div class="board-title">
+    <p>Nguyên liệu:</p>
+  </div>
+
+  <div class="control-bar">
+    <div class="filter-and-create">
+      <div class="sort">
+        <label>Sắp xếp:</label>
+        <select id="price" class="filter-btn">
+          <option value="">Giá</option>
+          <option value="-1">Giá cao - thấp</option>
+          <option value="1">Giá thấp - cao</option>
+        </select>
+      </div>
+
+      <button id="clear-sort-filter" style="display: none">Xoá bộ lọc</button>
+
+      <a target="_blank" rel="noopener noreferrer" href="/admin/all-materials/material/create" class="create-btn" id="create-btn">
+        <i class="fi fi-rr-plus"></i>
+        <p>Thêm Nguyên Liệu</p>
+      </a>
+    </div>
+    <input type="text" id="search-input" name="name" placeholder="Tìm kiếm nguyên liệu">
+  </div>
+
+  <div class="table">
+    {{> exportFileButton}}
+    <table class="all-items">
+      <thead>
+        <tr>
+          <td style="width:  5%">STT          </td>
+          <td style="width: 10%">Mã           </td>
+          <td style="width: 30%">Tên          </td>
+          <td style="width: 15%">Giá nhập     </td>
+          <td style="width: 15%">Tồn kho      </td>
+          <td style="width: 10%">Ngày hết hạn </td>
+          <td style="width: 15%">Thao tác     </td>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each (holderData 10)}}
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>  
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <span class="pagination"></span>
+</div>
+
+<script type="module" src="/js/admin/all/material.js"></script>

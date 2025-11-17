@@ -1,0 +1,200 @@
+.admin-all-chats-container {
+  height: 98vh;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  .chat-sidebar {
+    box-sizing: border-box;
+    width: 20%;
+    height: 100%;
+    background-color:  white;
+    border-radius: 10px;
+    padding: 5px;
+    .chat-header{
+      width: 100%;
+      height: 10%;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      font-weight: bold;
+      font-size: 32px;
+      color: #389845;
+    }
+    .chat-search {
+      height: 5%;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 10px;
+      border: 1px solid #389845;
+      text-indent: 5px;
+    }
+    .chat-search:focus {
+      outline: 1.5px solid #389845;
+    }
+    .chat-list {
+      margin-top: 5px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      height: 85%;
+      overflow-y: scroll;
+      box-sizing: border-box;
+      .item {
+        width: 100%;
+        height: 80px;
+        border-radius: 10px;
+        padding: 5px;
+        box-sizing: border-box;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: start;
+        gap: 5px;
+        background-color: white;
+        img { 
+          border-radius: 50%;
+          width: 40px;
+          aspect-ratio: 1/1;
+        }
+        .name { 
+          font-size: large; 
+          font-weight: bolder ;
+          text-overflow: ellipsis; 
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .last-message { 
+          font-size: smaller;
+          text-overflow: ellipsis; 
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .time { margin-top: 5px; font-size: smaller; color: #9FACBC;}
+      }
+      .item.active {
+        background-color: #e5e5e5;
+        color: #389845;
+      }
+      .item:hover {
+        filter: brightness(80%)
+      }
+    }
+    .chat-list::-webkit-scrollbar {display: none}
+  }
+  .chat-body {
+    box-sizing: border-box;
+    height: 100%;
+    width: 80%;
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    .chat-header {
+      height: 10%;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      gap: 5px;
+      img { 
+        border-radius: 50%;
+        width: 40px;
+        aspect-ratio: 1/1;
+      }
+      .name { font-size: large; font-weight: bolder }
+      .last-active { font-size: smaller }
+    }
+    .chat-content {
+      height: 80%;
+      overflow-y: scroll;
+      box-sizing: border-box;
+      width: 100%;
+      margin-block-start: 0px;
+      margin-block-end: 0px;
+      padding-inline-start: 0px;
+      padding: 10px;
+      li {
+        background-color: #e5e5e5;
+        border-radius: 10px;
+        padding: 10px;
+        list-style: none;
+        margin-top: 5px;
+        max-width: 500px;
+        width: fit-content;
+        word-wrap: break-word;
+        display: block;
+        clear: both;
+      }
+      .right-content {
+        float: right;
+        background-color: #5ab868;
+        color: white;
+      }
+      .right-date, .left-date {
+        font-size: 12px;
+        color: #888;
+        background-color: white;
+        margin-top: 2px;
+        padding: 0 5px;
+        list-style: none;
+        clear: both;
+        width: fit-content;
+        max-width: 200px;
+      }
+      .right-date {
+        float: right;
+        text-align: right;
+        margin-right: 5px;
+      }
+      .left-date {
+        float: left;
+        text-align: left;
+        margin-left: 5px;
+      }
+    }
+    .chat-content::-webkit-scrollbar-track {
+      background: white;
+    }
+    .input-form {
+      height: 10%;
+      display: flex;
+      align-items: center;
+      padding: 0 5px;
+      gap: 5px;
+      textarea {
+        width: 90%;
+        height: 40px;
+        padding: 0 5px;
+        border-radius: 10px;
+        border: 1px solid #389845;
+        word-wrap: break-word;
+        resize: none;
+        box-sizing: border-box;
+        padding: 10px 5px 0 5px;
+        font-family: 'Roboto', sans-serif;
+      }
+      textarea:focus {
+        outline: 1px solid #389845;
+      }
+      .send-btn {
+        width: 10%;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #389845;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+      }
+      .send-btn.not-allowed {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+    }
+  }
+}
+@media screen and (max-width: 700px) {
+
+}

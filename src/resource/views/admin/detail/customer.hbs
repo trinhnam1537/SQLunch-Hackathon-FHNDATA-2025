@@ -1,0 +1,72 @@
+<div class="customer-details-container">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">THÔNG TIN KHÁCH HÀNG</td></tr>
+      </thead>
+      <tr>
+        <td>Mã Khách Hàng</td>
+        <td><input type="text" id="id" name="id" disabled></td>
+      </tr>
+      <tr>
+        <td>Tên Khách Hàng</td>
+        <td><input type="text" id="name" name="name"></td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td><input type="text" id="email" name="email" disabled></td>
+      </tr>
+      <tr>
+        <td>SĐT</td>
+        <td><input type="text" id="phone" name="phone"></td>
+      </tr>
+      <tr>
+        <td>Địa Chỉ</td>
+        <td><input type="text" id="address" name="address"></td>
+      </tr>
+      <tr>
+        <td>Ngày sinh</td>
+        <td><input type="date" id="dob" name="dob"></td>
+      </tr>
+      <tr>
+        <td>Giới tính</td>
+        <td>
+          <input type="radio" name="gender" id="male" value="male">Nam
+          <input type="radio" name="gender" id="female" value="female">Nữ
+        </td>
+      </tr>
+      <tr>
+        <td>Tổng đơn hàng</td>
+        <td><input type="text" id="quantity" name="quantity" disabled></td>
+      </tr>
+      <tr>
+        <td>Tổng chi tiêu</td>
+        <td><input type="text" id="revenue" name="revenue" disabled></td>
+      </tr>
+      <tr>
+        <td>Hạng thành viên</td>
+        <td><input type="text" id="member" name="member" disabled></td>
+      </tr>
+    </table>
+
+    <div class="submit-button"><button title="submit" type="submit">Cập nhật</button></div>
+
+    <table id="table-2">
+      <thead>
+        <tr><td colspan="5">DANH SÁCH ĐƠN HÀNG</td></tr>
+      </thead>
+      <thead>
+        <tr>
+          <td style="width:  5%">STT                   </td>
+          <td style="width: 35%">Tổng tiền             </td>
+          <td style="width: 25%">Phương thức thanh toán</td>
+          <td style="width: 25%">Tình trạng            </td>
+          <td style="width: 10%">Chi tiết              </td>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/js/admin/detail/customer.js"></script>

@@ -1,0 +1,32 @@
+.advanced-search-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  flex-direction: column;
+  .checking {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    input {
+      width: 80%;
+      height: 50px;
+      text-align: center;
+    }
+  }
+  .order-process {
+    width: 100%;
+  }
+  table {
+    text-align: center;
+    background-color: white;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 10px;
+  }
+}
+
+@keyframes reloader {
+  to { transform: rotate(360deg)}
+} 

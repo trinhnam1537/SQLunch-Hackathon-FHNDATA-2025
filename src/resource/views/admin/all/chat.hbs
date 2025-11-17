@@ -1,0 +1,37 @@
+<div class="admin-all-chats-container">  
+  <div class="chat-sidebar">
+    <div class="chat-header">Chats ({{totalChat}})</div>
+    <input class="chat-search" placeholder="Tìm kiếm đoạn chat"></input>
+    <div class="chat-list">
+      {{#each chats}}
+        <div class="item" id="{{this.userInfo._id}}">
+          <img src="https://cosmeticgarden.vn/wp-content/uploads/2024/12/logo-xanh-gradient.png" alt="loading">
+          <div class="info">
+            <div class="name">{{this.userInfo.name}}</div>
+            <div class="last-message">{{this.lastMessage}}</div>
+            <div class="time">{{this.updatedAt}}</div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="chat-body">
+    <div class="chat-header" style="opacity: 0;">
+      <img src="https://cosmeticgarden.vn/wp-content/uploads/2024/12/logo-xanh-gradient.png" alt="loading">
+      <div>
+        <div class="name"></div>
+        <div class="last-active"></div>
+      </div>
+    </div>
+
+    <div class="chat-content"></div>
+    
+    <form class="input-form">
+      <textarea name="input" class="input" placeholder="Aa"></textarea>
+      <div class="send-btn not-allowed">Gửi</div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin/all/chat.js"></script>

@@ -1,0 +1,83 @@
+<div class="admin-all-purchases-container">  
+  <div class="header">
+    <div class="board-title">
+      <p>Đơn nhập: </p>
+    </div>
+
+    <div class="date-filter">
+      <input type="date" id="start-date">
+      <input type="date" id="end-date">
+      <button title="submit" type="submit">Xem</button>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <div class="search">
+      <select id="search-type" class="search-btn">
+        <option value="">Tìm kiếm theo</option>
+        <option value="_id" selected>ID</option>
+        <option value="supplierId">Mã NCC</option>
+      </select>
+      <input type="text" id="search-input" name="name" placeholder="Tìm kiếm đơn nhập" />
+    </div>
+
+    <div class="sort-filter">
+      <div class="sort">
+        <label>Sắp xếp:</label>
+        <select id="purchaseDate" class="filter-btn">
+          <option value="">Ngày đặt hàng</option>
+          <option value="1">Ngày gần nhất</option>
+          <option value="-1">Ngày xa nhất</option>
+        </select>
+        <select id="totalPurchasePrice" class="filter-btn">
+          <option value="">Giá trị</option>
+          <option value="1">Giá trị cao - thấp</option>
+          <option value="-1">Giá trị thấp - cao</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <button id="clear-sort-filter" style="display: none">Xoá bộ lọc</button>
+      </div>
+    </div>
+
+    <a href="/admin/all-purchases/purchase/create" target="_blank" rel="noopener noreferrer" class="create-btn" id="create-btn">
+      <i class="fi fi-rr-plus"></i>
+      <span>Thêm Đơn Nhập</span>
+    </a>
+  </div>
+
+  <div class="table">
+    {{> exportFileButton}}
+    <table class="all-items">
+      <thead>
+        <tr>
+          <td style="width:  5%">STT          </td>
+          <td style="width: 20%">Mã đơn nhập  </td>
+          <td style="width: 25%">Ngày nhập    </td>
+          <td style="width: 15%">Tổng sản phẩm</td>
+          <td style="width: 25%">Tổng chi phí </td>
+          <td style="width: 10%">Chi tiết     </td>
+          </td>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each (holderData 10)}}
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <span class="pagination"></span>
+</div>
+
+<script type="module" src="/js/admin/all/purchase.js"></script>

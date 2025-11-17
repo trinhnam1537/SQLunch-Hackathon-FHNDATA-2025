@@ -1,0 +1,47 @@
+<div class="scroll-to-top-icon" style="display: none;"><i class="fi fi-sr-angle-circle-up"></i></div>
+<div class="chatbot-icon" data-tippy-content="Chat với AI của cửa hàng"><i class="fi fi-rr-chatbot-speech-bubble"></i></div>
+<div class="chat-icon" data-tippy-content="Chat trực tiếp với admin"><i class="fi fi-sr-comment-quote"></i></div>
+
+<div class="chat-box" style="display: none">
+  <div class="chat-header" style="opacity: 0;">
+    <div class="icon">
+      <img src="https://res.cloudinary.com/bunny-store/image/upload/v1730102111/web-img/4_lnwzuk_jkpls2.webp" alt="loading">
+      <div>Hỗ trợ trực tuyến</div>
+    </div>
+    <div class="minimize" style="cursor: pointer;"><i class="fi fi-br-window-minimize"></i></div>
+  </div>
+  <div class="chat-body" style="display: none">
+    <ul class="chat-content">
+      <li class="left-content">Hi, em có thể hỗ trợ gì cho anh/chị không ạ</li>
+    </ul>
+    
+    <form class="input-form">
+      <textarea name="input" id="input" class="input" placeholder="Aa"></textarea>
+      <div class="send-btn not-allowed">Gửi</div>
+    </form>
+  </div>
+  <div class="not-logged-in"><p>Please <a href="/authentication/sign-in">Log in</a> to chat</p></div>
+</div>
+
+<div class="ai-chat-box" style="display: none">
+  <div class="chat-header" style="opacity: 0;">
+    <div class="icon">
+      <img src="https://res.cloudinary.com/bunny-store/image/upload/v1730102111/web-img/4_lnwzuk_jkpls2.webp" alt="loading">
+      <div>Chatbot</div>
+    </div>
+    <div class="minimize" style="cursor: pointer;"><i class="fi fi-br-window-minimize"></i></div>
+  </div>
+  <div class="chat-body" style="display: none">
+    <ul class="chat-content">
+      <li class="left-content">Xin chào, tôi là Gemini. Nếu bạn đang đợi phản hồi từ admin, bạn có thể hỏi tôi để tham khảo thêm về các sản phẩm của shop nha !</li>
+    </ul>
+    
+    <form class="input-form">
+      <textarea name="input" id="input" class="input" placeholder="Aa"></textarea>
+      <div class="send-btn not-allowed">Gửi</div>
+    </form>
+  </div>
+  <div class="not-logged-in"><p>Please <a href="/authentication/sign-in">Log in</a> to chat</p></div>
+</div>
+
+<script src="/js/partials/fixedComponents.js"></script>

@@ -1,0 +1,313 @@
+.all-orders-container {
+  .cart, .voucher, .contact-info, .payment-method {
+    background-color: #fff;
+    margin-top: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    p {
+      background: linear-gradient(135deg, #389845, #56c47b);
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      margin: 0;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  }
+  .voucher, .contact-info, .payment-method {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .voucher.show, .contact-info.show, .payment-method.show {
+    display: block;
+  }
+  .voucher.visible, .contact-info.visible, .payment-method.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .cart {
+    tfoot {
+      text-align: center;
+    }
+    table {
+      tbody {
+        td {height: 100px}
+        tr {
+          position: relative;
+          input[type='checkbox'] {
+            width: 100%;
+          }
+          img {
+            width: 75px;
+            aspect-ratio: 1/1;
+          }
+          a { 
+            text-decoration: none; 
+            color: black;
+            padding-left: 0 !important;
+            border: none;
+            background-color: transparent !important
+          }
+          .delete-button {cursor: pointer}
+        }
+      }
+      td.unavailable {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 95%;
+        height: 100%;
+        background: rgba(200, 200, 200, 0.7); /* Semi-transparent red overlay */
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        z-index: 10;
+        border-radius: 10px;
+      }
+    }
+  }
+  .voucher {
+    .voucher-input {
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      input {
+        flex: 1;
+        padding: 10px;
+      }
+      button {
+        background: #389845;
+        color: white;
+        font-weight: 600;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      button:hover {
+        background: #2e7b37;
+      }
+    }
+    .price {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      font-size: 16px;
+    }
+    .old-price-value {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .new-price-value {
+      font-weight: 700;
+      color: #389845;
+      background: #eaf7ee;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+    span.form-message {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+      display: block;
+      width: 100%;
+      color: #389845;
+    }
+  }
+  .contact-info {
+    .info {
+      display: grid;
+      grid-template-columns: auto auto;
+      .form-group {
+        width: 80%;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      label {
+        font-weight: bolder;
+        text-transform: capitalize;
+      }
+    }
+  }
+  .payment-method {
+    .form-group {
+      padding: 10px;
+      gap: 5px;
+      box-sizing: border-box;
+    }
+    label {
+      font-weight: bolder;
+      text-transform: capitalize;
+    }
+    .bank-account {
+      margin-top: 15px;
+      width: 100%;
+      background-color: #eaf7ec;
+      border: 1px solid #389845;
+      border-radius: 8px;
+      box-sizing: border-box;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      transition: all 0.3s ease-in-out;
+    }
+    .bank-account img {
+      width: 160px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+
+    .bank-account .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bank-account input[type="file"] {
+      padding: 6px;
+      border: 1px dashed #389845;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #fff;
+      transition: 0.3s;
+    }
+
+    .bank-account input[type="file"]:hover {
+      background: #f2fff4;
+    } 
+    .bank-account {
+      display: none;
+    }
+    input[value="transfer"]:checked ~ .bank-account {
+      display: flex;
+    }
+  }
+}
+.order-successfully-message, .order-confirm-message, .vouchers-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(600px, 90%);   /* prevent too wide on desktop, responsive on mobile */
+  background-color: #fff;
+  border: 2px solid #5ab868;
+  border-radius: 12px;
+  max-height: 80%;          /* allow scroll if text overflows */
+  overflow-y: auto;
+  z-index: 2000;            /* higher z-index to ensure it’s above everything */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* let content align naturally */
+  padding: 20px;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: fadeInScale 0.3s ease-out; /* smooth entrance */
+}
+.order-successfully-message i {
+  color: #28a745;
+  font-size: 60px;
+  margin-bottom: 10px;
+}
+.order-successfully-message h3 {
+  text-align: center;
+  margin: 5px 0;
+  color: #333;
+}
+.order-successfully-message h5 {
+  text-align: center;
+  font-style: italic;
+  margin: 0;
+  color: #555;
+}
+.order-successfully-message a {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #5ab868;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+.order-successfully-message a:hover {
+  background: #4aa157;
+}
+
+.order-confirm-message h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+.order-confirm-message .actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.order-confirm-message .deletebtn {
+  background: #f44336;
+  color: #fff;
+  width: 100px;
+  border: 1px solid #f44336;
+}
+.order-confirm-message .confirmbtn {
+  background: #5ab868;
+  color: #fff;
+  width: 100px;
+  border: 1px solid #5ab868;
+}
+
+a.momo-pay-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #d82d8b; /* MoMo pink */
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(216, 45, 139, 0.4);
+}
+a.momo-pay-btn:hover {
+  background: #ec1f52; /* brighter pink on hover */
+  box-shadow: 0 6px 14px rgba(236, 31, 82, 0.5);
+}
+a.momo-pay-btn:active {
+  background: #b51f6e; /* darker for press */
+  transform: scale(0.97);
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translate(-50%, -45%);}
+  to {opacity: 1; transform: translate(-50%, -50%);}
+}
+/* subtle animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
