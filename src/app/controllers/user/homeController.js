@@ -4,9 +4,10 @@ const brand = require('../../models/brandModel')
 const user = require('../../models/userModel')
 const notification = require('../../models/notificationModel')
 const employee = require('../../models/employeeModel')
-const kafka = require("kafkajs").Kafka
-const kafkaClient = new kafka({ brokers: ["localhost:9092"] })
-const producer = kafkaClient.producer()
+
+///new kafka import ( a persistent broker service running)
+const { producer } = require("../../kafka/producer");
+
 
 class homeController {
   async getVouchers(req, res, next) {
@@ -145,17 +146,31 @@ class homeController {
   
   async streamingKafka(req, res, next) {
     try {
-      const { topic, value } = req.body
+      const { topic, value } = req.body;
 
-      // await producer.connect()
-      // await producer.send({
-      //   topic: topic,
-      //   messages: [{ value: JSON.stringify(value) }],
-      // })
+      // Get logged-in userId OR anonymous ID from frontend
+      const uid = req.cookies.uid || value.userId;
+
+      const enhancedValue = {
+        ...value,
+        userId: uid
+      };
+
+      await producer.send({
+        topic,
+        messages: [
+          {
+            value: JSON.stringify(enhancedValue),
+            key: uid, // partitions by user ID (same user → same partition)
+          }
+        ]
+      });
+
+      return res.json({ success: true });
 
     } catch (error) {
-      console.log(error)
-      return res.json({error: error.message})
+      console.log(error);
+      return res.json({ error: error.message });
     }
   }
 }

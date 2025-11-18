@@ -15,7 +15,13 @@ const cron = require('node-cron')
 const { getUsersWithBirthdayThisMonth } = require('./app/controllers/cron/createBirthdayVoucher') 
 const { setVoucherExpired } = require('./app/controllers/cron/setVoucherExpired') 
 
-db.connect()
+// ⭐ ADD THIS
+const { initProducer } = require('./app/kafka/producer.js');
+
+db.connect();
+
+// ⭐ ADD THIS — connects once on server startup
+initProducer();
 app.use(express.json({ limit: '50mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({extended: true}))
