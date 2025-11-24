@@ -32,12 +32,12 @@ async function checkUser() {
 
   if (window.isLoggedIn) {
     const updateProfileButton = document.createElement('a')
-    updateProfileButton.innerText = 'Thông tin cá nhân'
+    updateProfileButton.innerText = 'Personal Information'
     updateProfileButton.setAttribute('href', '/profile/info')
     avatarMenu.appendChild(updateProfileButton)
   
     const logOutButton = document.createElement('a')
-    logOutButton.innerText = 'Đăng Xuất'
+    logOutButton.innerText = 'Sign Out'
     logOutButton.setAttribute('href', '/log-out')
     // logOutButton.onclick = async function() {
     //   getLog(
@@ -53,7 +53,7 @@ async function checkUser() {
   } 
   else {
     const logInButton = document.createElement('a')
-    logInButton.innerText = 'Đăng nhập'
+    logInButton.innerText = 'Sign In'
     logInButton.setAttribute('href', '/authentication/sign-in')
     avatarMenu.appendChild(logInButton)
   }
@@ -70,17 +70,22 @@ function setDisplay(width, menu) {
   else menu.style.display = 'flex'
 }
 
+searchIcon.addEventListener('click', () => {
+  searchInput.classList.toggle('open');
+  searchInput.focus();
+});
+
 // create input element
-searchIcon.onclick = function() {
-  if(searchInput.style.display === 'none') return searchInput.style.display = ''
+// searchIcon.onclick = function() {
+//   if(searchInput.style.display === 'none') return searchInput.style.display = ''
    
-  searchProducts.style.display = 'none' 
-  searchInput.style.display = 'none'
-}
+//   searchProducts.style.display = 'none' 
+//   searchInput.style.display = 'none'
+// }
 
 let timer
 searchInput.oninput = async function(event) {
-  searchProducts.style.display = 'none'
+  searchProducts.classList.remove("open")
   searchProducts.querySelectorAll('div.product').forEach(element => element.remove())
   if (event.target.value.trim() === '') return
 
@@ -94,7 +99,7 @@ searchInput.oninput = async function(event) {
     if (!response.ok) throw new Error(`Response status: ${response.status}`)
     const {data} = await response.json()
 
-    searchProducts.style.display = ''
+    searchProducts.classList.add("open")
 
     data.forEach((element) => {
       const div = document.createElement('div')

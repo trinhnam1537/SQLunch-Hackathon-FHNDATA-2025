@@ -1,58 +1,54 @@
 <div class="admin-all-orders-container">  
   <div class="header">
     <div class="board-title">
-      <p>Đơn hàng: </p>
+      <p>Order: </p>
     </div>
 
-    <div class="date-filter">
-      <input type="date" id="start-date">
-      <input type="date" id="end-date">
-      <button title="submit" type="submit">Xem</button>
-    </div>
+    {{> dateFilter}}
   </div>
   
   <div class="control-bar">
     <div class="search">
       <select id="search-type" class="search-btn">
-        <option value="">Tìm kiếm theo</option>
+        <option value="">Search by</option>
         <option value="_id" selected>ID</option>
-        <option value="customerInfo.userId">Mã khách hàng</option>
-        <option value="customerInfo.name">Tên khách hàng</option>
+        <option value="customerInfo.userId">Customer Code</option>
+        <option value="customerInfo.name">Customer Name</option>
       </select>
-      <input type="text" id="search-input" name="name" placeholder="Tìm kiếm đơn hàng" />
+      <input type="text" id="search-input" name="name" placeholder="Search order" />
     </div>
 
     <div class="sort-filter">
       <div class="sort">
-        <label>Sắp xếp:</label>
+        <label>Sort by:</label>
         <select id="createdAt" class="filter-btn">
-          <option value="">Ngày đặt hàng</option>
-          <option value="-1">Ngày mới nhất</option>
-          <option value="1">Ngày xa nhất</option>
+          <option value="">Order Date</option>
+          <option value="-1">Newest Date</option>
+          <option value="1">Oldest Date</option>
         </select>
         <select id="totalNewOrderPrice" class="filter-btn">
-          <option value="">Giá trị đơn</option>
-          <option value="-1">Giá trị cao - thấp</option>
-          <option value="1">Giá trị thấp - cao</option>
+          <option value="">Order Value</option>
+          <option value="-1">Value High - Low</option>
+          <option value="1">Value Low - High</option>
         </select>
       </div>
 
       <div class="filter">
-        <label>Lọc:</label>
+        <label>Filter:</label>
         <select id="status" class="filter-btn">
-          <option value="">Trạng thái đơn</option>
+          <option value="">Order Status</option>
         </select>
         <select id="paymentMethod" class="filter-btn">
-          <option value="">Thanh toán</option>
+          <option value="">Payment</option>
         </select>
-        <button id="clear-sort-filter" style="display: none">Xoá bộ lọc</button>
+        <button id="clear-sort-filter" style="display: none">Clear Filter</button>
       </div>
     </div>
 
-    <a href="/admin/all-orders/order/create" target="_blank" rel="noopener noreferrer" class="create-btn" id="create-btn">
+    <button class="create-btn" id="create-btn">
       <i class="fi fi-rr-plus"></i>
-      <span>Thêm Đơn Hàng</span>
-    </a>
+      <span>Add Order</span>
+    </button>
   </div>
 
   <div class="table">
@@ -60,12 +56,12 @@
     <table class="all-items">
       <thead>
         <tr>
-          <td style="width:  5%">STT           </td>
-          <td style="width: 25%">Mã Đơn Hàng   </td>
-          <td style="width: 25%">Tên Khách Hàng</td>
-          <td style="width: 15%">Tổng Số Tiền  </td>
-          <td style="width: 20%">Ngày Đặt Hàng </td>
-          <td style="width: 10%">Chi tiết      </td>
+          <td style="width:  5%">No.           </td>
+          <td style="width: 25%">Order Code   </td>
+          <td style="width: 25%">Customer Name</td>
+          <td style="width: 15%">Total Amount  </td>
+          <td style="width: 20%">Order Date </td>
+          <td style="width: 10%">Details      </td>
         </tr>
       </thead>
 
@@ -85,6 +81,154 @@
   </div>
 
   <span class="pagination"></span>
+</div>
+
+<div class="admin-create-order-container" id="create-modal">
+  <div id="form">
+    <div class="form-title">
+      <p>Add New Order</p>
+    </div>
+    <div class="form-group">
+      <label for="orderDate">Sale Date *</label>
+      <input type="date" id="orderDate" name="orderDate" required>
+    </div>
+    <div class="form-group">
+      <label for="userId">Select Customer</label>
+      <select name="userId" id="userId" required>
+        <option value="" selected disabled>-- Customer --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="paymentMethod">Select Payment Method</label>
+      <select name="paymentMethod" id="paymentMethod" required>
+        <option value="" selected disabled>-- Payment Method --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="note">Notes</label>
+      <input type="text" id="note" name="note">
+    </div>
+    <div class="form-group">
+      <label>Select Product</label>
+      <input type="text"  id="product-search" placeholder="Enter product name">
+    </div>
+    <div class="products-match"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <td style="width:  5%;">No.</td>
+          <td style="width: 40%;">Product</td>
+          <td style="width: 15%; text-align:right">Unit Price</td>
+          <td style="width: 10%;">Quantity</td>
+          <td style="width: 15%; text-align:right">Total Amount</td>
+          <td style="width: 10%;"></td>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: right">0</td>
+        <td></td>
+      </tfoot>
+    </table>  
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="order-details-container" id="detail-modal">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">ORDER INFORMATION</td></tr>
+      </thead>
+      <tr>
+        <td>Order Code</td>
+        <td><input type="text" id="id" disabled></td>
+      </tr>
+      <tr>
+        <td>Order Date</td>
+        <td><input type="text" id="date" disabled></td>
+      </tr>
+      <tr>
+        <td>Customer</td>
+        <td style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="name" disabled>
+          <a id="customer-link" href="" target="_blank">View</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Phone</td>
+        <td><input type="text" id="phone" disabled></td>
+      </tr>
+      <tr>
+        <td>Address</td>
+        <td><input type="text" id="address" disabled></td>
+      </tr>
+      <tr>
+        <td>Notes</td>
+        <td><input type="text" id="note" disabled></td>
+      </tr>
+      <tr>
+        <td>Payment Method</td>
+        <td><select name="paymentMethod" id="paymentMethod"></select></td>
+      </tr>
+      <tr>
+        <td>Total Price</td>
+        <td><input type="text" id="total" disabled></td>
+      </tr>
+      <tr>
+        <td>Total After Discount</td>
+        <td><input type="text" id="new-total" disabled></td>
+      </tr>
+      <tr>
+        <td>Order Status</td>
+        <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Rating Status</td>
+        <td><input name="status" id="isRated" disabled></input></td>
+      </tr>
+      <tr>
+        <td>Payment Status</td>
+        <td>
+          <select name="status" id="isPaid">
+            <option value="false" disabled>Not Paid</option>
+            <option value="true" disabled>Paid</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+
+    <table id="table-2">
+      <thead>
+        <tr><td colspan="5">ORDER DETAILS</td></tr>
+      </thead>
+      <thead>
+        <tr>
+          <td>STT</td>
+          <td>Product Name</td>
+          <td>Số Lượng</td>
+          <td>Giá</td>
+          <td>Details</td>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Update</button>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="/js/admin/all/order.js"></script>

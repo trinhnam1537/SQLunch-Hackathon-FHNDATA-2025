@@ -203,7 +203,7 @@ async function createOrder() {
       !productQuantity  || 
       !totalOrderPrice
     ) {
-      pushNotification("Hãy điền đầy đủ các thông tin!")
+      pushNotification("Please fill in all information!")
       return
     }
   
@@ -231,7 +231,7 @@ async function createOrder() {
     setTimeout(() => window.location.reload(), 2000)
   } catch (error) {
     console.error('Error creating customer:', error)
-    pushNotification("Đã có lỗi xảy ra.")
+    pushNotification("An error occurred.")
   }
 }
 

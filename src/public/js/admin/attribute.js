@@ -5,15 +5,16 @@ async function createAttribute(id, rowIndex) {
   const code = row.querySelector('input#code').value
   const name = row.querySelector('input#name').value
   const wage = deFormatNumber(row.querySelector('input#wage')?.value)
+  const order = row.querySelector('input#order')?.value
 
-  if (code === '' || name === '' || wage === '') {
-    return pushNotification('Vui lòng điền đầy đủ thông tin.')
+  if (code === '' || name === '' || wage === '' || order === '') {
+    return pushNotification('Please fill in all information.')
   }
   
   const response = await fetch(`/admin/all-attributes/create/${id}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({code: code, name: name, wage: wage})
+    body: JSON.stringify({code: code, name: name, wage: wage, order: order})
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {error, message} = await response.json()
@@ -25,6 +26,8 @@ async function createAttribute(id, rowIndex) {
   row.querySelector('input#name').disabled = true
   const wageInput = row.querySelector('input#wage')
   if (wageInput) wageInput.disabled = true
+  const orderInput = row.querySelector('input#order')
+  if (orderInput) orderInput.disabled = true
 
   row.querySelector('td:last-child').innerHTML = `
     <button id="${id}" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
@@ -35,7 +38,7 @@ async function createAttribute(id, rowIndex) {
 
 async function deleteAttribute(id, rowIndex) {
   const row = document.querySelector(`div.${id}`).querySelector('table').rows[rowIndex]
-  if (confirm('Bạn có chắc chắn muốn xóa?')) {
+  if (confirm('Are you sure you want to delete?')) {
     const code = row.querySelector('input#code').value
     const name = row.querySelector('input#name').value
     const response = await fetch(`/admin/all-attributes/delete/${id}`, {
@@ -64,15 +67,16 @@ async function updateAttribute(id, rowIndex) {
       const code = row.querySelector('input#code').value
       const name = row.querySelector('input#name').value
       const wage = deFormatNumber(row.querySelector('input#wage')?.value)
+      const order = deFormatNumber(row.querySelector('input#order')?.value)
 
-      if (code === '' || name === '' || wage === '') {
-        return pushNotification('Vui lòng điền đầy đủ thông tin.')
+      if (code === '' || name === '' || wage === '' || order === '') {
+        return pushNotification('Please fill in all information.')
       }
 
       const response = await fetch(`/admin/all-attributes/update/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({code: code, name: name, wage: wage})
+        body: JSON.stringify({code: code, name: name, wage: wage, order: order})
       })
 
       if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -85,6 +89,9 @@ async function updateAttribute(id, rowIndex) {
       const wageInput = row.querySelector('input#wage')
       if (wageInput) wageInput.disabled = true
 
+      const orderInput = row.querySelector('input#order')
+      if (orderInput) orderInput.disabled = true
+
       row.querySelector('input#name').parentElement.querySelector('button').remove()
     })
     
@@ -92,12 +99,18 @@ async function updateAttribute(id, rowIndex) {
     const wageInput = row.querySelector('input#wage')
     if (wageInput) wageInput.disabled = false
 
+    const orderInput = row.querySelector('input#order')
+    if (orderInput) orderInput.disabled = false
+
     row.querySelector('input#name').parentElement.appendChild(button)
 
   } else {
-    row.querySelector('input#name').disabled = true
-    const wageInput = row.querySelector('input#wage')
-    if (wageInput) wageInput.disabled = true
+      row.querySelector('input#name').disabled = true
+      const wageInput = row.querySelector('input#wage')
+      if (wageInput) wageInput.disabled = true
+
+      const orderInput = row.querySelector('input#order')
+      if (orderInput) orderInput.disabled = true
 
     row.querySelector('input#name').parentElement.querySelector('button').remove()
   }
@@ -112,9 +125,21 @@ function addRow(id) {
   const tr = document.createElement('tr')
   if (id === 'position') {
     tr.innerHTML = `
-      <td><input type="text" id="code" placeholder="Nhập mã"></td>
-      <td><input type="text" id="wage" placeholder="Nhập lương"></td>
-      <td><input type="text" id="name" placeholder="Nhập tên"></td>
+      <td><input type="text" id="code" placeholder="Enter code"></td>
+      <td><input type="text" id="wage" placeholder="Enter salary"></td>
+      <td><input type="text" id="name" placeholder="Enter name"></td>
+      <td data-id="${id}">
+        <button id="create">
+          <i class="fi fi-rr-check"></i>
+        </button>
+        <button id="delete" onclick="deleteRow(this.parentElement.dataset.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-cross-small"></i></button>
+      </td>
+    `
+  } else if (id === 'order-status') {
+    tr.innerHTML = `
+      <td><input type="text" id="order" placeholder="Enter order"></td>
+      <td><input type="text" id="code" placeholder="Enter code"></td>
+      <td><input type="text" id="name" placeholder="Enter name"></td>
       <td data-id="${id}">
         <button id="create">
           <i class="fi fi-rr-check"></i>
@@ -124,8 +149,8 @@ function addRow(id) {
     `
   } else {
     tr.innerHTML = `
-      <td><input type="text" id="code" placeholder="Nhập mã"></td>
-      <td><input type="text" id="name" placeholder="Nhập tên"></td>
+      <td><input type="text" id="code" placeholder="Enter code"></td>
+      <td><input type="text" id="name" placeholder="Enter name"></td>
       <td data-id="${id}">
         <button id="create">
           <i class="fi fi-rr-check"></i>
@@ -152,13 +177,13 @@ async function getMembership() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><td colspan="3">HẠNG THÀNH VIÊN</td></tr>
+        <tr><td colspan="3">MEMBER RANK</td></tr>
       </thead>
       <thead>
         <tr>
-          <td>Mã</td>
-          <td>Tên</td>
-          <td>Thao tác</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Action</td>
         </tr>
       <tbody>
         ${data.map(item => 
@@ -175,7 +200,7 @@ async function getMembership() {
         ).join("")}
       </tbody>
     </table>
-    <div class="submit-button"><button id="membership" onclick="addRow(this.id)">Thêm</button></div>
+    <div class="submit-button"><button id="membership" onclick="addRow(this.id)">Add</button></div>
   `
 
   document.querySelector('div.membership').appendChild(table)
@@ -192,18 +217,20 @@ async function getOrderStatus() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><td colspan="3">TRẠNG THÁI ĐƠN HÀNG</td></tr>
+        <tr><td colspan="4">ORDER STATUS</td></tr>
       </thead>
       <thead>
         <tr>
-          <td>Mã</td>
-          <td>Tên</td>
-          <td>Thao tác</td>
+          <td>Order</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Action</td>
         </tr>
       <tbody>
         ${data.map(item => 
           `
             <tr>
+              <td><input type="text" id="order" value="${item.order}" disabled></td>
               <td><input type="text" id="code" value="${item.code}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
@@ -215,7 +242,7 @@ async function getOrderStatus() {
         ).join("")}
       </tbody>
     </table>
-    <div class="submit-button"><button id="order-status" onclick="addRow(this.id)">Thêm</button></div>
+    <div class="submit-button"><button id="order-status" onclick="addRow(this.id)">Add</button></div>
   `
 
   document.querySelector('div.order-status').appendChild(table)
@@ -232,13 +259,13 @@ async function getPaymentMethod() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><td colspan="3">PHƯƠNG THƯC THANH TOÁN</td></tr>
+        <tr><td colspan="3">PAYMENT METHOD</td></tr>
       </thead>
       <thead>
         <tr>
-          <td>Mã</td>
-          <td>Tên</td>
-          <td>Thao tác</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Action</td>
         </tr>
       <tbody>
         ${data.map(item => 
@@ -255,7 +282,7 @@ async function getPaymentMethod() {
         ).join("")}
       </tbody>
     </table>
-    <div class="submit-button"><button id="payment-method" onclick="addRow(this.id)">Thêm</button></div>
+    <div class="submit-button"><button id="payment-method" onclick="addRow(this.id)">Add</button></div>
   `
 
   document.querySelector('div.payment-method').appendChild(table)
@@ -272,14 +299,14 @@ async function getPosition() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><td colspan="4">VỊ TRÍ CÔNG VIỆC</td></tr>
+        <tr><td colspan="4">JOB POSITION</td></tr>
       </thead>
       <thead>
         <tr>
-          <td style="width: 23%;">Mã</td>
-          <td style="width: 30%;">Lương</td>
-          <td style="width: 30%;">Tên</td>
-          <td style="width: 17%;">Thao tác</td>
+          <td style="width: 23%;">Code</td>
+          <td style="width: 30%;">Salary</td>
+          <td style="width: 30%;">Name</td>
+          <td style="width: 17%;">Action</td>
         </tr>
       <tbody>
         ${data.map(item => 
@@ -297,7 +324,7 @@ async function getPosition() {
         ).join("")}
       </tbody>
     </table>
-    <div class="submit-button"><button id="position" onclick="addRow(this.id)">Thêm</button></div>
+    <div class="submit-button"><button id="position" onclick="addRow(this.id)">Add</button></div>
   `
 
   document.querySelector('div.position').appendChild(table)
@@ -314,13 +341,13 @@ async function getProductStatus() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><td colspan="3">TRẠNG THÁI SẢN PHẨM</td></tr>
+        <tr><td colspan="3">PRODUCT STATUS</td></tr>
       </thead>
       <thead>
         <tr>
-          <td>Mã</td>
-          <td>Tên</td>
-          <td>Thao tác</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Action</td>
         </tr>
       <tbody>
         ${data.map(item => 
@@ -337,7 +364,7 @@ async function getProductStatus() {
         ).join("")}
       </tbody>
     </table>
-    <div class="submit-button"><button id="product-status" onclick="addRow(this.id)">Thêm</button></div>
+    <div class="submit-button"><button id="product-status" onclick="addRow(this.id)">Add</button></div>
   `
 
   document.querySelector('div.product-status').appendChild(table)
@@ -359,7 +386,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     
     await getProductStatus()
   } catch (error) {
-    console.error('Có lỗi xảy ra:', error)
-    pushNotification('Có lỗi xảy ra')
+    console.error('An error occurred:', error)
+    pushNotification('An error occurred')
   }
 })

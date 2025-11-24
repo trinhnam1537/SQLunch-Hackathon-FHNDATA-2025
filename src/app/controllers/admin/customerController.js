@@ -56,7 +56,7 @@ class allCustomersController {
 
   async allCustomers(req, res, next) {
     try {
-      return res.render('admin/all/customer', { title: 'Danh sách khách hàng', layout: 'admin' })
+      return res.render('admin/all/customer', { title: 'All Customers', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
@@ -146,7 +146,7 @@ class allCustomersController {
       //   console.log(error)
       // }
 
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Update successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -155,7 +155,7 @@ class allCustomersController {
   // create
   async createCustomer(req, res, next) {
     try {
-      return res.render('admin/create/customer', { title: 'Thêm khách hàng mới', layout: 'admin' })
+      return res.render('admin/create/customer', { title: 'Add new customer', layout: 'admin' })
     } catch (error) {
       console.log(error)
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
@@ -165,7 +165,7 @@ class allCustomersController {
   async customerCreated(req, res, next) {
     try {
       const userExist = await user.findOne({ email: req.body.email })
-      if (userExist) throw new Error('Email đã tồn tại')
+      if (userExist) throw new Error('Email already exists')
 
       const salt = await bcrypt.genSalt(10)
       const hashedPassword = await bcrypt.hash(req.body.password, salt)
@@ -202,7 +202,7 @@ class allCustomersController {
       //   console.log(error)
       // }
       
-      return res.json({isValid: true, message: 'Tạo tài khoản thành công'})
+      return res.json({isValid: true, message: 'Create account successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
