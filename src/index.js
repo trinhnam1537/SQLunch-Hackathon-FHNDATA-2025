@@ -22,6 +22,19 @@ db.connect();
 
 // ⭐ ADD THIS — connects once on server startup
 initProducer();
+console.log("Starting kafka producer...");
+
+setTimeout(() => {
+    console.log("This prints after 5 seconds");
+    // Put the code you want to run later HERE
+}, 5000);
+
+
+const { startAllConsumers } = require('./app/kafka/RunAllConsumers');
+
+startAllConsumers();
+
+
 app.use(express.json({ limit: '50mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({extended: true}))

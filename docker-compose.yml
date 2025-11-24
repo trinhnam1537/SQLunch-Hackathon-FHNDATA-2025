@@ -1,4 +1,21 @@
 services:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"   # HTTP (ClickHouse UI / clients)
+      - "9000:9000"   # Native protocol
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./clickhouse-config/users.d:/etc/clickhouse-server/users.d
+
+
   kafka-1:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka-1
@@ -51,3 +68,9 @@ services:
       KAFKA_LOG_DIRS: /var/lib/kafka/data
     mem_limit: 1200m
     cpus: 1.0
+
+
+
+volumes:
+  clickhouse_data:
+  clickhouse_logs:

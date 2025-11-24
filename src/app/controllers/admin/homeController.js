@@ -11,6 +11,9 @@ const notification = require('../../models/notificationModel')
 const orderStatus = require('../../models/orderStatusModel')
 const member = require('../../models/memberModel')
 const position = require('../../models/positionModel')
+const { clickhouse } = require('../../kafka/ClickhouseConection');
+
+
 
 class homeController {
   async show(req, res, next) {
@@ -300,6 +303,33 @@ class homeController {
     } catch (error) {
       console.log(error)
       return res.json({error: error.message})
+    }
+  }
+
+
+  async getActiveUsersRealtime(req, res) {
+    try {
+      // Query ClickHouse via the shared client
+      const sql = `
+        SELECT count() AS active
+        FROM analytics.active_sessions
+        WHERE lastEventType != 'page_exit'
+      `;
+
+      const result = await clickhouse.query({
+        query: sql,
+        format: 'JSONEachRow'
+      });
+
+      const rows = await result.json();
+
+      return res.json({
+        current: rows.length > 0 ? rows[0].active : 0
+      });
+
+    } catch (error) {
+      console.error("ClickHouse realtime error:", error);
+      return res.json({ error: error.message });
     }
   }
 }
