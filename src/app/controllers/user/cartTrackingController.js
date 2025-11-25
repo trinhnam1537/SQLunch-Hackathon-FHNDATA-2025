@@ -15,10 +15,10 @@ class cartTrackingController {
       }
 
       // Validate action enum
-      if (!['view', 'add_to_cart', 'remove_from_cart'].includes(action)) {
+      if (!['add_to_cart', 'remove_from_cart'].includes(action)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid action'
+          error: 'Invalid action. Must be add_to_cart or remove_from_cart'
         })
       }
 
@@ -69,13 +69,11 @@ class cartTrackingController {
       ])
 
       const result = {
-        totalViews: 0,
         totalAddToCart: 0,
         totalRemoveFromCart: 0
       }
 
       stats.forEach(stat => {
-        if (stat._id === 'view') result.totalViews = stat.count
         if (stat._id === 'add_to_cart') result.totalAddToCart = stat.count
         if (stat._id === 'remove_from_cart') result.totalRemoveFromCart = stat.count
       })

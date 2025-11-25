@@ -413,6 +413,120 @@ async function getProducts() {
   })
 }
 
+async function getProductAnalytics() {
+  try {
+    // Load summary metrics
+    const summaryRes = await fetch('/admin/analytics/summary')
+    const summaryData = await summaryRes.json()
+    if (summaryData.success) {
+      document.getElementById('home-total-views').textContent = summaryData.data.totalViews.toLocaleString('vi-VN')
+      document.getElementById('home-total-sales').textContent = summaryData.data.totalSales.toLocaleString('vi-VN')
+    }
+
+    // Load top viewed
+    const viewedRes = await fetch('/admin/analytics/top-viewed?limit=5')
+    const viewedData = await viewedRes.json()
+    if (viewedData.success) {
+      renderHomeTopProducts('home-top-viewed', viewedData.data, 'viewed')
+    }
+
+    // Load top purchased
+    const purchasedRes = await fetch('/admin/analytics/top-purchased?limit=5')
+    const purchasedData = await purchasedRes.json()
+    if (purchasedData.success) {
+      renderHomeTopProducts('home-top-purchased', purchasedData.data, 'purchased')
+    }
+  } catch (error) {
+    console.error('Error loading product analytics:', error)
+  }
+}
+
+async function getOrderAnalytics() {
+  try {
+    // Payment success rate + by method
+    const paymentRes = await fetch('/admin/analytics/payment-success-rate-by-method')
+    const paymentData = await paymentRes.json()
+    if (paymentData.success && paymentData.data) {
+      const overall = paymentData.data.overallRate || 0
+      document.getElementById('home-payment-success-rate').textContent = `${Number(overall).toFixed(2)}%`
+      const methods = paymentData.data.rateByMethod || []
+      renderPaymentMethods('home-add-to-cart-by-method', methods)
+    }
+
+    // Add-to-cart overall rate (uses add-to-cart by product endpoint for overall rate)
+    const addRes = await fetch('/admin/analytics/add-to-cart-rate-by-product')
+    const addData = await addRes.json()
+    if (addData.success && addData.data) {
+      const overallAdd = addData.data.overallRate || 0
+      document.getElementById('home-add-to-cart-rate').textContent = `${Number(overallAdd).toFixed(2)}%`
+    }
+  } catch (error) {
+    console.error('Error loading order analytics:', error)
+  }
+}
+
+function renderPaymentMethods(elementId, items) {
+  const container = document.getElementById(elementId)
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p style="color: #999;">No data</p>'
+    return
+  }
+
+  let html = `
+    <table style="width:100%; border-collapse: collapse;">
+      <thead style="background: linear-gradient(90deg, #2c7a7b, #6fb3b8); color: #fff;">
+        <tr>
+          <th style="text-align:left; padding:8px;">PAYMENT METHOD</th>
+          <th style="text-align:center; padding:8px;">TOTAL ORDERS</th>
+          <th style="text-align:center; padding:8px;">SUCCESSFUL</th>
+          <th style="text-align:center; padding:8px;">SUCCESS RATE</th>
+        </tr>
+      </thead>
+      <tbody>
+  `
+
+  items.forEach(item => {
+    const method = item.paymentMethod || 'Unknown'
+    const total = item.total ?? 0
+    const successful = item.successful ?? 0
+    const rate = item.rate ?? 0
+    const color = rate >= 60 ? '#28a745' : (rate >= 30 ? '#ffc107' : '#e74c3c')
+
+    html += `
+      <tr style="border-bottom: 1px solid #f0f0f0;">
+        <td style="padding:8px">${method}</td>
+        <td style="text-align:center; padding:8px">${total}</td>
+        <td style="text-align:center; padding:8px">${successful}</td>
+        <td style="text-align:center; padding:8px; color:${color};"><strong>${Number(rate).toFixed(2)}%</strong></td>
+      </tr>
+    `
+  })
+
+  html += `</tbody></table>`
+  container.innerHTML = html
+}
+
+function renderHomeTopProducts(elementId, items, type) {
+  const container = document.getElementById(elementId)
+  if (items.length === 0) {
+    container.innerHTML = '<p style="color: #999;">No data</p>'
+    return
+  }
+
+  let html = '<ul style="list-style: none; padding: 0; margin: 0;">'
+  items.forEach(item => {
+    const count = type === 'viewed' ? item.viewCount : item.purchaseCount
+    html += `
+      <li style="padding: 4px 0; border-bottom: 1px solid #f0f0f0;">
+        <small><strong>${item.name}</strong></small><br>
+        <small style="color: #666;">${count} ${type === 'viewed' ? 'views' : 'sold'}</small>
+      </li>
+    `
+  })
+  html += '</ul>'
+  container.innerHTML = html
+}
+
 async function getSuppliers() {
   const response = await fetch('/admin/all/data/suppliers')
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -587,6 +701,8 @@ async function getAll() {
     await getEmployees(fetchBody)
     await getSuppliers()
     await getProducts()
+    await getProductAnalytics()
+    await getOrderAnalytics()
     await getStores()
     // await getPurchases(fetchBody)
     // await getBrands()

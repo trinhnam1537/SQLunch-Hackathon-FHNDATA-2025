@@ -138,6 +138,9 @@ async function getProducts(sortOptions, filterOptions, currentPage, itemsPerPage
       }
       else if (col.value === 'brand') {
         td.textContent = item.brand?.name || value
+      } else if (col.value === 'viewCount') {
+        td.textContent = value ?? 0
+        td.style.textAlign = 'right'
       }
       else {
         td.textContent = value ?? ''
