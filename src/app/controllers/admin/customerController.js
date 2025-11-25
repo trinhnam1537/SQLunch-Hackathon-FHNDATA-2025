@@ -97,7 +97,7 @@ class allCustomersController {
 
   async allCustomers(req, res, next) {
     try {
-      return res.render('admin/all/customer', { title: 'All Customers', layout: 'admin' })
+      return res.render('admin/all/customer', { title: 'Customer List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }

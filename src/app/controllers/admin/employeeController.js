@@ -55,7 +55,7 @@ class allEmployeesController {
 
   async allEmployees(req, res, next) {
     try {
-      return res.render('admin/all/employee', { title: 'Danh sách nhân sự', layout: 'admin' })
+      return res.render('admin/all/employee', { title: 'Employee List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
@@ -87,7 +87,7 @@ class allEmployeesController {
         dob      : req.body.dob
       })
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -111,7 +111,7 @@ class allEmployeesController {
       })
       await newEmp.save()
       
-      return res.json({message: 'Tạo tài khoản thành công'})
+      return res.json({message: 'Created successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
