@@ -78,7 +78,7 @@ class allProductsController {
 
   async allProducts(req, res, next) {
     try {
-      return res.render('admin/all/product', { title: 'Danh sách sản phẩm', layout: 'admin' })
+      return res.render('admin/all/product', { title: 'Product List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
@@ -130,6 +130,8 @@ class allProductsController {
             guide         : req.body.guide,
             quantity      : req.body.quantity,
             status        : req.body.status,
+            isFlashDeal   : req.body.isFlashDeal,
+            isNewArrival  : req.body.isNewArrival,
           }
         },
         { new: true }
@@ -149,7 +151,7 @@ class allProductsController {
       //   console.log(error)
       // }
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }  
@@ -207,13 +209,12 @@ class allProductsController {
         details     : req.body.details,
         guide       : req.body.guide,
         quantity    : req.body.quantity,
-        status      : req.body.status,
         'img.path'  : result.secure_url,
         'img.filename' : result.public_id
       })
       const savedProduct = await newProduct.save()
 
-      return res.json({isValid: true, message: 'Tạo sản phẩn mới thành công'})
+      return res.json({isValid: true, message: 'Created successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }

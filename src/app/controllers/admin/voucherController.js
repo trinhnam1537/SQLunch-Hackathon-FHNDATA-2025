@@ -50,7 +50,7 @@ class allVouchersController {
 
   async allVouchers(req, res, next) {
     try {
-      return res.render('admin/all/voucher', { title: 'Danh sách voucher', layout: 'admin' })
+      return res.render('admin/all/voucher', { title: 'Voucher List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }

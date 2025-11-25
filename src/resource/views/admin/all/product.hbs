@@ -184,17 +184,6 @@
     </div>
 
     <div class="form-group">
-      <label></label>
-      <select name="status">
-        <option value="">-- Product Status --</option>
-        <option value="normal">Normal</option>
-        <option value="flash-sale">Flash Sale</option>
-        <option value="hot">Hot</option>
-        <option value="new-arrival">New Arrival</option>
-      </select>
-    </div>
-
-    <div class="form-group">
       <label>Product Image</label>
       <input type="file" name="img" id="img"/>
     </div>
@@ -224,6 +213,7 @@
             <option value="makeup">Makeup</option>
           </select>
           <select name="skincare" id="skincare" style="display: none">
+            <option value="" selected></option>
             <option value="xit-khoang">Xịt Khoáng</option>
             <option value="mat-na">Mặt Nạ</option>
             <option value="serum">Serum</option>
@@ -237,6 +227,7 @@
             <option value="sua-rua-mat">Sữa Rửa Mặt</option>
           </select>
           <select name="makeup" id="makeup" style="display: none">
+            <option value="" selected></option>
             <option value="phan-ma">Phấn Má</option>
             <option value="mascara">Mascara</option>
             <option value="ke-mat">Kẻ Mắt</option>
@@ -250,7 +241,7 @@
         <td>Brand</td>
         <td><select name="brand" id="brand"></select></td>
       <tr>
-        <td>Tên</td>
+        <td>Name</td>
         <td><input type="text" id="name"></td>
       </tr>
       <tr>
@@ -296,6 +287,24 @@
       <tr>
         <td>Product Status</td>
         <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Flash Deal ?</td>
+        <td>
+          <select name="isFlashDeal" id="isFlashDeal">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>New Arrival ?</td>
+        <td>
+          <select name="isNewArrival" id="isNewArrival">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </td>
       </tr>
       <tr>
         <td>Product Image</td>

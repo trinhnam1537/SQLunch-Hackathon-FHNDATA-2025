@@ -60,7 +60,7 @@ class allOrdersController {
 
   async allOrders(req, res, next) {
     try {
-      return res.render('admin/all/order', { title: 'Danh sách đơn hàng', layout: 'admin' })
+      return res.render('admin/all/order', { title: 'Order List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
@@ -230,7 +230,7 @@ class allOrdersController {
       //   console.log(error)
       // }
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -313,7 +313,7 @@ class allOrdersController {
       //   console.log(error)
       // }
       
-      return res.json({message: 'Tạo đơn hàng mới thành công'})
+      return res.json({message: 'Created successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }

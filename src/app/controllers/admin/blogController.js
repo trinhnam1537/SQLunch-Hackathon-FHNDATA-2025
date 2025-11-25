@@ -129,7 +129,7 @@ class blogController {
       })
 
       await newBlog.save()
-      return res.json({ isValid: true, message: 'Tạo blog mới thành công' })
+      return res.json({ isValid: true, message: 'Created successfully' })
 
     } catch (error) {
       console.log(error)

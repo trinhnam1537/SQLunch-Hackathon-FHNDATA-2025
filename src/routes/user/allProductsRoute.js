@@ -4,7 +4,9 @@ const allProductsController = require('../../app/controllers/user/allProductsCon
 
 
 router.get('/'                       , allProductsController.showAllProducts)
-router.get('/status/:slug'           , allProductsController.showAllProducts)
+router.get('/isFlashDeal/true'       , allProductsController.showAllProducts)
+router.get('/isTopSelling/true'      , allProductsController.showAllProducts)
+router.get('/isNewArrival/true'      , allProductsController.showAllProducts)
 router.get('/categories/:slug'       , allProductsController.showAllProducts)
 router.get('/skincare/:slug'         , allProductsController.showAllProducts)
 router.get('/makeup/:slug'           , allProductsController.showAllProducts)

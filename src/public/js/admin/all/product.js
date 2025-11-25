@@ -29,6 +29,8 @@ function generateColumns() {
     <label><input type="checkbox" value="price" checked> Current Price</label>
     <label><input type="checkbox" value="quantity" checked> Stock</label>
     <label><input type="checkbox" value="status"> Status</label>
+    <label><input type="checkbox" value="isFlashDeal"> FlashDeal</label>
+    <label><input type="checkbox" value="isNewArrival"> New Arrival</label>
     <label><input type="checkbox" value="rate"> Rating</label>
     <label><input type="checkbox" value="saleNumber"> Sales Count</label>
     <label><input type="checkbox" value="rateNumber"> Review Count</label>
@@ -250,6 +252,8 @@ async function openProductDetail(productId) {
     // Fill form
     detailModal.querySelector('input#id').value = productInfo._id
     detailModal.querySelector('select#categories').value = productInfo.categories || ''
+    detailModal.querySelector('select#isFlashDeal').value = productInfo.isFlashDeal 
+    detailModal.querySelector('select#isNewArrival').value = productInfo.isNewArrival 
     detailModal.querySelector('input#name').value = productInfo.name || ''
     detailModal.querySelector('input#oldPrice').value = formatNumber(productInfo.oldPrice)
     detailModal.querySelector('input#price').value = formatNumber(productInfo.price)
@@ -347,9 +351,11 @@ async function updateProduct() {
   const description   = detailModal.querySelector('input#description').value
   const details       = detailModal.querySelector('input#details').value
   const guide         = detailModal.querySelector('input#guide').value
-  const quantity      = detailModal.querySelector('input#quantity').value
+  const quantity      = parseInt(detailModal.querySelector('input#quantity').value)
   const status        = detailModal.querySelector('select#status').value
-
+  const isFlashDeal   = detailModal.querySelector('select#isFlashDeal').value === 'false' ? false : true
+  const isNewArrival  = detailModal.querySelector('select#isNewArrival').value === 'false' ? false : true
+  
   // Kiểm tra thay đổi
   if (
     categories === currentProductInfo.categories &&
@@ -365,6 +371,8 @@ async function updateProduct() {
     guide === currentProductInfo.guide &&
     quantity == currentProductInfo.quantity &&
     status === currentProductInfo.status &&
+    isFlashDeal === currentProductInfo.isFlashDeal &&
+    isNewArrival === currentProductInfo.isNewArrival &&
     !imgPath.path
   ) {
     return pushNotification('Please update the information')
@@ -376,7 +384,7 @@ async function updateProduct() {
     id: currentProductInfo._id,
     categories, skincare, makeup, brand, name,
     oldPrice, price, purchasePrice,
-    description, details, guide, quantity, status
+    description, details, guide, quantity, status, isFlashDeal, isNewArrival
   }
   if (imgPath.path) payload.img = imgPath.path
 
@@ -435,7 +443,6 @@ if (createBtn) createBtn.onclick = () => createModal.classList.add('show')
 if (createCloseBtn) createCloseBtn.onclick = () => createModal.classList.remove('show')
 createModal?.addEventListener('click', e => { if (e.target === createModal) createModal.classList.remove('show') })
 
-// Xử lý ảnh tạo mới
 createModal?.querySelector('input#img')?.addEventListener('change', function () {
   const file = this.files[0]
   if (file) {
@@ -458,9 +465,8 @@ async function createProduct() {
   const details       = createModal.querySelector('input#details')?.value
   const guide         = createModal.querySelector('input#guide')?.value
   const quantity      = createModal.querySelector('input#quantity')?.value
-  const status        = createModal.querySelector('select[name="status"]')?.value
 
-  if (!categories || !brand || !name || !purchasePrice || !oldPrice || !price || !description || !details || !guide || !quantity || !status || !createImgPath.path) {
+  if (!categories || !brand || !name || !purchasePrice || !oldPrice || !price || !description || !details || !guide || !quantity || !createImgPath.path) {
     return pushNotification('Please fill in all information!')
   }
 
@@ -469,7 +475,7 @@ async function createProduct() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       categories, skincare, makeup, brand, name, purchasePrice,
-      oldPrice, price, description, details, guide, quantity, status,
+      oldPrice, price, description, details, guide, quantity,
       img: createImgPath.path
     })
   })

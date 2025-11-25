@@ -43,7 +43,7 @@ class allSuppliersController {
 
   async allSuppliers(req, res, next) {
     try {
-      return res.render('admin/all/supplier', { title: 'Danh sách đối tác', layout: 'admin' })
+      return res.render('admin/all/supplier', { title: 'Supplier List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
@@ -72,7 +72,7 @@ class allSuppliersController {
         address : req.body.address ,
       })
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       console.log(error)
       return res.json({error: error.message})
