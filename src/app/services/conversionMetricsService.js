@@ -11,7 +11,7 @@ class conversionMetricsService {
       const successfulOrders = await Order.countDocuments({
         deletedAt: null,
         isPaid: true,
-        status: 'completed'
+        status: 'done'
       })
 
       return totalOrders > 0 ? Number((successfulOrders / totalOrders * 100).toFixed(2)) : 0
@@ -75,82 +75,81 @@ class conversionMetricsService {
     }
   }
 
-  // Add to Cart Rate: (Total add_to_cart actions) / (Total view actions)
+  // Add to Cart Rate: (Total add_to_cart actions) / (Total views from Product.viewCount)
   async getAddToCartRate() {
     try {
-      const totalViews = await CartInteraction.countDocuments({
-        action: 'view',
-        deletedAt: null
-      })
+      const totalViews = await Product.aggregate([
+        { $match: { deletedAt: null, viewCount: { $gt: 0 } } },
+        { $group: { _id: null, total: { $sum: '$viewCount' } } }
+      ])
 
       const totalAddToCart = await CartInteraction.countDocuments({
         action: 'add_to_cart',
         deletedAt: null
       })
 
-      return totalViews > 0 ? Number((totalAddToCart / totalViews * 100).toFixed(2)) : 0
+      const totalViewCount = totalViews.length > 0 ? totalViews[0].total : 0
+      return totalViewCount > 0 ? Number((totalAddToCart / totalViewCount * 100).toFixed(2)) : 0
     } catch (error) {
       console.error('Error calculating add to cart rate:', error)
       throw error
     }
   }
 
-  // Add to Cart Rate by Product
+  // Add to Cart Rate by Product - using Product.viewCount from DB
   async getAddToCartRateByProduct(limit = 10) {
     try {
-      const data = await CartInteraction.aggregate([
-        { $match: { deletedAt: null } },
+      // Get all products with viewCount > 0
+      const products = await Product.find(
+        { deletedAt: null, viewCount: { $gt: 0 } },
+        { _id: 1, name: 1, viewCount: 1 }
+      ).lean()
+
+      if (products.length === 0) {
+        return []
+      }
+
+      // Get add to cart count by product from CartInteraction
+      const cartData = await CartInteraction.aggregate([
+        { $match: { action: 'add_to_cart', deletedAt: null } },
         {
           $group: {
             _id: '$productId',
-            views: {
-              $sum: { $cond: [{ $eq: ['$action', 'view'] }, 1, 0] }
-            },
-            addToCart: {
-              $sum: { $cond: [{ $eq: ['$action', 'add_to_cart'] }, 1, 0] }
-            }
-          }
-        },
-        {
-          $project: {
-            _id: 1,
-            views: 1,
-            addToCart: 1,
-            rate: {
-              $cond: [
-                { $eq: ['$views', 0] },
-                0,
-                { $multiply: [{ $divide: ['$addToCart', '$views'] }, 100] }
-              ]
-            }
-          }
-        },
-        { $sort: { rate: -1 } },
-        { $limit: limit },
-        {
-          $lookup: {
-            from: 'products',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'product'
-          }
-        },
-        {
-          $unwind: {
-            path: '$product',
-            preserveNullAndEmptyArrays: true
+            addToCartCount: { $sum: 1 }
           }
         }
       ])
 
-      return data.map((item, index) => ({
-        rank: index + 1,
-        productId: item._id,
-        productName: item.product?.name || 'Unknown',
-        views: item.views,
-        addToCart: item.addToCart,
-        rate: Number(item.rate.toFixed(2))
-      }))
+      // Create map from add_to_cart data
+      const cartMap = {}
+      cartData.forEach(cart => {
+        cartMap[String(cart._id)] = cart.addToCartCount
+      })
+
+      // Merge product data with cart data and calculate rate
+      const merged = products.map(product => {
+        const productIdStr = String(product._id)
+        const addToCartCount = cartMap[productIdStr] || 0
+        const viewCount = product.viewCount || 0
+        const rate = viewCount > 0 ? (addToCartCount / viewCount) * 100 : 0
+
+        return {
+          productId: product._id,
+          productName: product.name || 'Unknown',
+          viewCount: viewCount,
+          addToCart: addToCartCount,
+          rate: Number(rate.toFixed(2))
+        }
+      })
+
+      // Sort by rate and limit
+      return merged
+        .sort((a, b) => b.rate - a.rate)
+        .slice(0, limit)
+        .map((item, index) => ({
+          rank: index + 1,
+          ...item
+        }))
     } catch (error) {
       console.error('Error calculating add to cart rate by product:', error)
       throw error

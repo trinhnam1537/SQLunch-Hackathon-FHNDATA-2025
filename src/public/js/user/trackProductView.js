@@ -40,10 +40,12 @@
   const TRACKING_KEY = 'product_view_tracked'
 
   // Lấy product slug từ URL
-  // VD: /all-products/chi-tiet-san-pham-xyz → 'chi-tiet-san-pham-xyz'
+  // Chỉ track nếu là product detail page: /all-products/product/{productId}
   function getProductSlug() {
-    const pathParts = window.location.pathname.split('/')
-    return pathParts[pathParts.length - 1] || null
+    const pathname = window.location.pathname
+    // Check if it's a product detail page
+    const match = pathname.match(/\/all-products\/product\/([^\/\?]+)/)
+    return match ? match[1] : null
   }
 
   // Lấy session ID (hoặc tạo mới)
