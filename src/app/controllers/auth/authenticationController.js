@@ -31,7 +31,7 @@ class authenticationController {
           await user.updateOne({ _id: userId}, {
             isActive: true
           })
-
+          
           res.cookie('rt', rt, {
             httpOnly: true,
             secure: true,

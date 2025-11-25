@@ -570,3 +570,75 @@ document.querySelector('button[type="submit"]').addEventListener('click', async 
 window.addEventListener('DOMContentLoaded', async function loadData() {
   await getAll()
 })
+
+
+
+// ===============================================
+// ACTIVE USERS REAL-TIME TRACKING
+// ===============================================
+
+let activeUsersHistory = [];
+let activeUsersChart = null;
+
+async function getActiveUsers() {
+  try {
+    const response = await fetch('/admin/all/data/active-users');
+    const { current } = await response.json();
+
+    const now = new Date();
+
+    activeUsersHistory.push({
+      timestamp: now,
+      count: current
+    });
+
+    // Keep last 24 hours
+    const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    activeUsersHistory = activeUsersHistory.filter(x => x.timestamp > cutoff);
+
+    updateActiveUsersChart();
+
+  } catch (err) {
+    console.error("Error getting active users:", err);
+  }
+}
+
+function updateActiveUsersChart() {
+  const ctx = document.getElementById('active-users-chart');
+  if (!ctx) return;
+
+  const labels = activeUsersHistory.map(p => p.timestamp.toLocaleTimeString());
+  const data = activeUsersHistory.map(p => p.count);
+
+  if (activeUsersChart) activeUsersChart.destroy();
+
+  activeUsersChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: "Active Users",
+        data,
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76,175,80,0.2)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+// Update every 3 seconds
+setInterval(() => {
+  getActiveUsers();
+}, 3000);
+
+// Initial startup
+window.addEventListener('DOMContentLoaded', () => {
+  getActiveUsers();
+});
