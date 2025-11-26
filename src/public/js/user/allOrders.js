@@ -130,6 +130,12 @@ async function updateTableBody() {
     `
 
     newProductDelete.onclick = function() {
+      // Track the remove_from_cart action
+      const quantity = parseInt(newProductQuantityInput.value) || 1
+      if (window.trackCartAction) {
+        window.trackCartAction(product._id, 'remove_from_cart', quantity)
+      }
+      
       getProductInfo.localCounting--
       getProductInfo.productInfo.forEach((localProduct, index) => {
         if (localProduct.id === product._id) getProductInfo.productInfo.splice(index, 1)
