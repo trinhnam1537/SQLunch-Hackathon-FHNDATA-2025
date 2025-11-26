@@ -8,6 +8,8 @@
     {{> dateFilter}}
   </div>
 
+ 
+  </script>
   <div class="control-bar">
     <div class="search">
       <select id="search-type" class="search-btn">
@@ -24,18 +26,18 @@
         <label>Sort by:</label>
         <select id="price" class="filter-btn">
           <option value="">Price</option>
-          <option value="1">Price High - Low</option>
-          <option value="-1">Price Low - High</option>
+          <option value="-1">Price High - Low</option>
+          <option value="1">Price Low - High</option>
         </select>
         <select id="rate" class="filter-btn">
           <option value="">Rating</option>
-          <option value="1">Rating High - Low</option>
-          <option value="-1">Rating Low - High</option>
+          <option value="-1">Rating High - Low</option>
+          <option value="1">Rating Low - High</option>
         </select>
         <select id="saleNumber" class="filter-btn">
           <option value="">Sales Volume</option>
-          <option value="1">Sales Volume High - Low</option>
-          <option value="-1">Sales Volume Low - High</option>
+          <option value="-1">Sales Volume High - Low</option>
+          <option value="1">Sales Volume Low - High</option>
         </select>
       </div>
 
@@ -58,7 +60,6 @@
       <span>Add Product</span>
     </button>
   </div>
-
   <div class="table">
     {{> exportFileButton}}
     <table class="all-items">
