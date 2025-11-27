@@ -14,12 +14,9 @@ const port = process.env.PORT
 const cron = require('node-cron')
 const { getUsersWithBirthdayThisMonth } = require('./app/controllers/cron/createBirthdayVoucher') 
 const { setVoucherExpired } = require('./app/controllers/cron/setVoucherExpired') 
-<<<<<<< HEAD
-=======
 const { setFlashDealProducts } = require('./app/controllers/cron/setFlashDealProducts')
 const { setTopSellingProducts } = require('./app/controllers/cron/setTopSellingProducts')
 const { setNewArrivalProducts } = require('./app/controllers/cron/setNewArrivalProducts')
->>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
 
 db.connect()
 app.use(express.json({ limit: '50mb' }))
