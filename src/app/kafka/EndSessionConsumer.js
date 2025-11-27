@@ -1,16 +1,28 @@
 // src/consumers/sessionConsumer.js
 const { Kafka } = require("kafkajs");
 const { createClient } = require("@clickhouse/client");
+const getRedis = require("../redis/redisClient");
 
-// Config
+// -------------------------------------------------
+// CONFIG
+// -------------------------------------------------
 const KAFKA_BROKERS = ["localhost:9092", "localhost:9094", "localhost:9095"];
 const KAFKA_GROUP_ID = "session-processor";
 const TOPIC = "web-events";
 
-// session timeout = if no events for this long, we consider session closed (ms)
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const SESSION_TTL_SEC = SESSION_TIMEOUT_MS / 1000;
 
-// ClickHouse client (adjust host/user/password/database as needed)
+const ACTIVE_TYPES = new Set([
+  "heartbeat",
+  "action",
+  "visibility_change",
+  "page_view"
+]);
+
+// -------------------------------------------------
+// CLICKHOUSE
+// -------------------------------------------------
 const clickhouse = createClient({
   host: "http://localhost:8123",
   username: "default",
@@ -18,46 +30,109 @@ const clickhouse = createClient({
   database: "analytics"
 });
 
-// Kafka setup
-const kafka = new Kafka({ brokers: KAFKA_BROKERS });
-const consumer = kafka.consumer({ groupId: KAFKA_GROUP_ID });
+// ClickHouse batching
+let chBuffer = [];
+let chLastFlush = Date.now();
+const CH_BATCH_SIZE = 500;
+const CH_FLUSH_INTERVAL = 1000;
 
-// In-memory session store (structure below). Replace with Redis if you need durability.
+// -------------------------------------------------
+// SESSION VALIDATION STATE (your old logic)
+// -------------------------------------------------
+const sessionLifecycle = new Map(); // { started: bool, closed: bool }
+
+// -------------------------------------------------
+// SESSION STORE (unchanged end-session store)
+// -------------------------------------------------
 const sessions = new Map();
-// session structure:
-// {
-//   sessionId,
-//   visitorId,
-//   startTime (ms),
-//   urlStart,
-//   lastEventTime (ms),  // last seen event timestamp
-//   idleStart (ms|null), // when idle started
-//   totalIdleMs (number),
-//   urlEnd
-// }
 
+const PRODUCT_REGEX = /all-products\/product\/[A-Za-z0-9\-]+$/;
+
+// -------------------------------------------------
+// HELPERS
+// -------------------------------------------------
 function toMs(ts) {
-  // support ts being epoch ms or JS Date or string
-  if (!ts) return null;
+  if (ts == null) return null;
   if (typeof ts === "number") return ts;
   const n = Number(ts);
   if (!isNaN(n)) return n;
-  const d = new Date(ts);
-  return d.getTime();
+  const d = new Date(ts).getTime();
+  return isNaN(d) ? null : d;
 }
 
-async function flushSessionToClickHouse(session, endTimestampMs) {
-  // compute final end time
+// -------------------------------------------------
+// CLICKHOUSE FLUSHER
+// -------------------------------------------------
+async function flushCH() {
+  if (chBuffer.length === 0) return;
+
+  const batch = chBuffer.splice(0, chBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "sessions",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ ClickHouse batch insert failed:", err);
+  }
+
+  chLastFlush = Date.now();
+}
+
+setInterval(flushCH, CH_FLUSH_INTERVAL);
+
+// -------------------------------------------------
+// REDIS ACTIVE SESSION MATERIALIZER (optimized)
+// -------------------------------------------------
+async function updateRedisActiveSession(redis, event) {
+  const sid = event.sessionId;
+  const key = `active:${sid}`;
+
+  if (event.type === "page_exit") {
+    await redis.del(key);
+    return;
+  }
+
+  // MULTI = atomic pipeline, 1 round-trip
+  await redis
+    .multi()
+    .hSet(key, {
+      sessionId: sid,
+      visitorId: event.userId,
+      lastEventTime: event.timestamp,
+      lastEventType: event.type,
+      url: event.url || ""
+    })
+    .expire(key, SESSION_TTL_SEC)
+    .exec();
+}
+
+// -------------------------------------------------
+// END SESSION → CLICKHOUSE (unchanged, but batched)
+// -------------------------------------------------
+function queueSessionFlush(session, endTimestampMs) {
   const startMs = session.startTime;
-  const endMs = endTimestampMs || session.lastEventTime;
-  // if session had an open idle at close, count idle up to endMs
+  const endMs = endTimestampMs || session.lastEventTime || Date.now();
+
   let totalIdleMs = session.totalIdleMs || 0;
   if (session.idleStart) {
     totalIdleMs += Math.max(0, endMs - session.idleStart);
   }
 
   const dwellMs = Math.max(0, (endMs - startMs) - totalIdleMs);
-  const row = {
+
+  let urlMostActive = "";
+  let maxActions = 0;
+  for (const [url, count] of Object.entries(session.urlActionCounts)) {
+    if (count > maxActions) {
+      maxActions = count;
+      urlMostActive = url;
+    }
+  }
+
+  chBuffer.push({
     sessionId: session.sessionId,
     visitorId: session.visitorId,
     startTime: new Date(startMs).toISOString().slice(0, 19).replace("T", " "),
@@ -65,159 +140,167 @@ async function flushSessionToClickHouse(session, endTimestampMs) {
     urlStart: session.urlStart || "",
     urlEnd: session.urlEnd || "",
     totalIdleSeconds: Math.floor(totalIdleMs / 1000),
-    dwellSeconds: Math.floor(dwellMs / 1000)
-  };
+    dwellSeconds: Math.floor(dwellMs / 1000),
+    totalClicks: session.totalClicks || 0,
+    totalActions: session.totalActions || 0,
+    totalPageViews: session.totalPageViews || 0,
+    productViews: session.productViewSet.size,
+    urlMostActive
+  });
 
-  try {
-    await clickhouse.insert({
-      table: "sessions",
-      // JSONEachRow format is easy for objects
-      values: [row],
-      format: "JSONEachRow"
-    });
-    console.log("✅ flushed session to ClickHouse:", row.sessionId, "dwell:", row.dwellSeconds, "s");
-  } catch (err) {
-    console.error("❌ failed writing session to ClickHouse", err);
+  if (chBuffer.length >= CH_BATCH_SIZE) {
+    flushCH();
   }
 }
 
-function handleEvent(event) {
-  // event (from Kafka) expected shape:
-  // { timestamp, eventType, visitorId, sessionId, url, action }
-  const tsMs = toMs(event.timestamp);
-  const sessId = String(event.sessionId);
-  let s = sessions.get(sessId);
+// -------------------------------------------------
+// EVENT HANDLER
+// -------------------------------------------------
+async function handleEvent(event, redis) {
+  let ts = toMs(event.timestamp);
+  if (ts == null) ts = Date.now();
+  event.timestamp = ts;
 
-  if (!s && event.eventType === "page_view") {
-    // create a new session on page_view
+  const sid = event.sessionId;
+  const uid = event.userId;
+  const url = event.url || "";
+
+  // -------------------------------------------------
+  // SESSION LIFECYCLE VALIDATION (your old logic)
+  // -------------------------------------------------
+  let lifecycle = sessionLifecycle.get(sid);
+
+  if (!lifecycle) {
+    if (event.type !== "page_view") return;
+    lifecycle = { started: true, closed: false };
+    sessionLifecycle.set(sid, lifecycle);
+  }
+
+  if (lifecycle.closed) return;
+
+  if (event.type === "page_exit") {
+    lifecycle.closed = true;
+    sessionLifecycle.set(sid, lifecycle);
+  }
+
+  // -------------------------------------------------
+  // REDIS ACTIVE SESSION MATERIALIZER
+  // -------------------------------------------------
+  await updateRedisActiveSession(redis, event);
+
+  // -------------------------------------------------
+  // END SESSION METRICS (unchanged)
+  // -------------------------------------------------
+  let s = sessions.get(sid);
+
+  // Create session on first page_view
+  if (!s && event.type === "page_view") {
     s = {
-      sessionId: sessId,
-      visitorId: event.visitorId || "",
-      startTime: tsMs,
-      urlStart: event.url || "",
-      lastEventTime: tsMs,
+      sessionId: sid,
+      visitorId: uid,
+      startTime: ts,
+      lastEventTime: ts,
+      urlStart: url,
+      urlEnd: url,
       idleStart: null,
       totalIdleMs: 0,
-      urlEnd: event.url || ""
+      totalClicks: 0,
+      totalActions: 0,
+      totalPageViews: 0,
+      urlActionCounts: {},
+      productViewSet: new Set()
     };
-    sessions.set(sessId, s);
-    return;
+    sessions.set(sid, s);
   }
 
-  // If session doesn't exist but we got other events (activity, heartbeat, page_exit),
-  // we can create a best-effort session (use first event as start)
-  if (!s) {
-    s = {
-      sessionId: sessId,
-      visitorId: event.visitorId || "",
-      startTime: tsMs,
-      urlStart: event.url || "",
-      lastEventTime: tsMs,
-      idleStart: null,
-      totalIdleMs: 0,
-      urlEnd: event.url || ""
-    };
-    sessions.set(sessId, s);
+  // Ignore events for sessions never started
+  if (!s) return;
+
+  // UPDATE METRICS
+  s.lastEventTime = ts;
+
+  const isProduct = PRODUCT_REGEX.test(url);
+
+  if (event.type === "page_view") {
+    s.totalPageViews++;
+    s.urlEnd = url;
   }
 
-  // Update lastEventTime in any case
-  s.lastEventTime = Math.max(s.lastEventTime || 0, tsMs);
-
-  switch (event.eventType) {
-    case "idle":
-      // mark idle start only if not already idling
-      if (!s.idleStart) s.idleStart = tsMs;
-      break;
-
-    case "activity":
-    case "heartbeat":
-    case "visibility_change":
-    case "page_view":
-      // if we were idling, add gap from idleStart -> this event
-      if (s.idleStart) {
-        const gap = Math.max(0, tsMs - s.idleStart);
-        s.totalIdleMs = (s.totalIdleMs || 0) + gap;
-        s.idleStart = null;
-      }
-      // update url/end info for activity or page_view
-      if (event.url) s.urlEnd = event.url;
-      break;
-
-    case "page_exit":
-      // count any open idle up to page_exit time
-      if (s.idleStart) {
-        const gap = Math.max(0, tsMs - s.idleStart);
-        s.totalIdleMs = (s.totalIdleMs || 0) + gap;
-        s.idleStart = null;
-      }
-      // finalize session: flush to ClickHouse, then remove state
-      if (event.url) s.urlEnd = event.url;
-      flushSessionToClickHouse(s, tsMs).catch(console.error);
-      sessions.delete(sessId);
-      break;
-
-    default:
-      // unknown eventType -> treat as activity (safe default)
-      if (s.idleStart) {
-        const gap = Math.max(0, tsMs - s.idleStart);
-        s.totalIdleMs = (s.totalIdleMs || 0) + gap;
-        s.idleStart = null;
-      }
-      break;
+  if (event.type === "action") {
+    s.totalActions++;
+    if (event.action === "click") s.totalClicks++;
+    s.urlActionCounts[url] = (s.urlActionCounts[url] || 0) + 1;
+    s.urlEnd = url;
   }
-}
 
-// Periodic sweeper: close sessions that have been idle/no events for SESSION_TIMEOUT_MS
-async function sweepSessions() {
-  const now = Date.now();
-  for (const [sessionId, s] of sessions.entries()) {
-    if (now - (s.lastEventTime || 0) >= SESSION_TIMEOUT_MS) {
-      // treat as session close by timeout
-      console.log("⏳ session timeout flush:", sessionId);
-      await flushSessionToClickHouse(s, s.lastEventTime || now);
-      sessions.delete(sessionId);
+  if (isProduct) s.productViewSet.add(url);
+
+  if (ACTIVE_TYPES.has(event.type)) {
+    if (s.idleStart) {
+      s.totalIdleMs += ts - s.idleStart;
+      s.idleStart = null;
     }
   }
+
+  if (event.type === "idle") {
+    if (!s.idleStart) s.idleStart = ts;
+  }
+
+  if (event.type === "page_exit") {
+    if (s.idleStart) {
+      s.totalIdleMs += ts - s.idleStart;
+      s.idleStart = null;
+    }
+    queueSessionFlush(s, ts);
+    sessions.delete(sid);
+  }
 }
 
+// -------------------------------------------------
+// MAIN CONSUMER START
+// -------------------------------------------------
 async function EndSessionConsumerStart() {
-  await consumer.connect();
-  console.log("Kafka consumer connected");
-  await consumer.subscribe({ topic: TOPIC, fromBeginning: false });
+  const redis = await getRedis();
 
-  // Start sweeper: every minute
-  setInterval(() => {
-    sweepSessions().catch(err => console.error("Sweeper error:", err));
-  }, 60 * 1000);
+  // Clear old active sessions at boot
+  const keys = await redis.keys("active:*");
+  for (const k of keys) await redis.del(k);
+
+  console.log("Redis ready, Kafka starting...");
+
+  const kafka = new Kafka({ brokers: KAFKA_BROKERS });
+  const consumer = kafka.consumer({ groupId: KAFKA_GROUP_ID });
+
+  await consumer.connect();
+  await consumer.subscribe({ topic: TOPIC, fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ message }) => {
       try {
-        const raw = message.value.toString();
-        const event = JSON.parse(raw);
+        const ev = JSON.parse(message.value.toString());
 
-        // MAP to correct field names
-        const mappedEvent = {
-          timestamp: event.timestamp,
-          eventType: event.type,
-          visitorId: event.userId,
-          sessionId: event.sessionId,
-          url: event.url,
-          action: event.action
+        const event = {
+          timestamp: ev.timestamp ?? Date.now(),
+          type: ev.type ?? ev.eventType ?? null,
+          userId: ev.userId ?? ev.visitorId ?? null,
+          sessionId: ev.sessionId ?? ev.sid ?? null,
+          url: ev.url ?? "",
+          action: ev.action ?? null
         };
 
-        handleEvent(mappedEvent);
+        if (!event.sessionId || !event.type) return;
+
+        await handleEvent(event, redis);
 
       } catch (err) {
-        console.error("Error processing message:", err);
+        console.error("❌ Error processing message:", err);
       }
     }
   });
 }
 
-// Self-run if executed directly
 if (require.main === module) {
-  start().catch(err => {
+  EndSessionConsumerStart().catch(err => {
     console.error("Fatal consumer error:", err);
     process.exit(1);
   });

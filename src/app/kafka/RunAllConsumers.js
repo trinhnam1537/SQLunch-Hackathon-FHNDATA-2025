@@ -3,8 +3,8 @@ const { RawIngestConsumerStart } = require('./RawIngestConsumer');
 
 async function startAllConsumers() {
     try {
-        console.log("🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑Starting RawIngestConsumer...");
-        RawIngestConsumerStart();
+        // console.log("🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑Starting RawIngestConsumer...");
+        // RawIngestConsumerStart();
 
         console.log("🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑🤑Starting ActiveSessionConsumer...");
         EndSessionConsumerStart();

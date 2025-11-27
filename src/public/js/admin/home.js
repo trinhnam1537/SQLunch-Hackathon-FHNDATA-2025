@@ -577,48 +577,125 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
 // ACTIVE USERS REAL-TIME TRACKING
 // ===============================================
 
-let activeUsersHistory = [];
-let activeUsersChart = null;
+// let activeUsersHistory = [];
+// let activeUsersChart = null;
+
+// async function getActiveUsers() {
+//   try {
+//     const response = await fetch('/admin/all/data/active-users');
+//     const { current } = await response.json();
+
+//     const now = new Date();
+
+//     activeUsersHistory.push({
+//       timestamp: now,
+//       count: current
+//     });
+
+//     // Keep last 24 hours
+//     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+//     activeUsersHistory = activeUsersHistory.filter(x => x.timestamp > cutoff);
+
+//     updateActiveUsersChart();
+
+//   } catch (err) {
+//     console.error("Error getting active users:", err);
+//   }
+// }
+
+// function updateActiveUsersChart() {
+//   const labels = activeUsersHistory.map(p => p.timestamp.toLocaleTimeString());
+//   const data = activeUsersHistory.map(p => p.count);
+
+//   // if (activeUsersChart) activeUsersChart.destroy();
+
+//   const activeUsersChart = document.getElementById("customer-online")
+//   Chart.getChart(activeUsersChart)?.destroy()
+//   new Chart(activeUsersChart, {
+//     type: 'line',
+//     data: {
+//       labels,
+//       datasets: [{
+//         label: "Active Users",
+//         data,
+//         borderColor: '#4CAF50',
+//         backgroundColor: 'rgba(76,175,80,0.2)',
+//         borderWidth: 2,
+//         tension: 0.3,
+//         fill: true
+//       }]
+//     },
+//     options: {
+//       responsive: true,
+//       maintainAspectRatio: false
+//     }
+//   })
+// }
+
+// // Update every 3 seconds
+// setInterval(() => {
+//   getActiveUsers();
+// }, 3000);
+
+// // Initial startup
+// window.addEventListener('DOMContentLoaded', () => {
+//   getActiveUsers();
+// });
+
+
+const WINDOW_SIZE = 28800; 
+const SAMPLE_INTERVAL = 3000; 
+
+class CircularBuffer {
+  constructor(size) {
+    this.size = size;
+    this.buf = new Array(size).fill(null);
+    this.idx = 0;
+    this.full = false;
+  }
+
+  add(value) {
+    this.buf[this.idx] = value;
+    this.idx = (this.idx + 1) % this.size;
+    if (this.idx === 0) this.full = true;
+  }
+
+  toArray() {
+    if (!this.full) return this.buf.slice(0, this.idx);
+    return [
+      ...this.buf.slice(this.idx),
+      ...this.buf.slice(0, this.idx)
+    ];
+  }
+}
+
+const windowBuf = new CircularBuffer(WINDOW_SIZE);
 
 async function getActiveUsers() {
   try {
     const response = await fetch('/admin/all/data/active-users');
     const { current } = await response.json();
-
-    const now = new Date();
-
-    activeUsersHistory.push({
-      timestamp: now,
-      count: current
-    });
-
-    // Keep last 24 hours
-    const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    activeUsersHistory = activeUsersHistory.filter(x => x.timestamp > cutoff);
-
+    windowBuf.add(current);
     updateActiveUsersChart();
-
   } catch (err) {
     console.error("Error getting active users:", err);
   }
 }
 
 function updateActiveUsersChart() {
-  const ctx = document.getElementById('active-users-chart');
-  if (!ctx) return;
+  const arr = windowBuf.toArray();
+  const labels = arr.map((_, i) => i);
 
-  const labels = activeUsersHistory.map(p => p.timestamp.toLocaleTimeString());
-  const data = activeUsersHistory.map(p => p.count);
+  const canvas = document.getElementById("customer-online");
+  Chart.getChart(canvas)?.destroy();
 
-  if (activeUsersChart) activeUsersChart.destroy();
-
-  activeUsersChart = new Chart(ctx, {
+  new Chart(canvas, {
     type: 'line',
     data: {
       labels,
       datasets: [{
         label: "Active Users",
-        data,
+        data: arr,
         borderColor: '#4CAF50',
         backgroundColor: 'rgba(76,175,80,0.2)',
         borderWidth: 2,
@@ -633,12 +710,5 @@ function updateActiveUsersChart() {
   });
 }
 
-// Update every 3 seconds
-setInterval(() => {
-  getActiveUsers();
-}, 3000);
-
-// Initial startup
-window.addEventListener('DOMContentLoaded', () => {
-  getActiveUsers();
-});
+setInterval(getActiveUsers, SAMPLE_INTERVAL);
+window.addEventListener('DOMContentLoaded', getActiveUsers);

@@ -16,6 +16,38 @@ ORDER BY (timestamp);
 
 CREATE DATABASE analytics;
 
+
+CREATE TABLE analytics.sessions
+(
+    -- Core identifiers
+    sessionId String,
+    visitorId String,
+
+    -- Session timing
+    startTime DateTime,
+    endTime DateTime,
+
+    -- URLs
+    urlStart String,
+    urlEnd String,
+
+    -- Idle / dwell
+    totalIdleSeconds UInt32,
+    dwellSeconds UInt32,
+
+    -- 🔥 NEW METRICS
+    totalClicks UInt32,          -- count of click events
+    totalActions UInt32,         -- all activity events (click, move, keydown...)
+    totalPageViews UInt32,       -- count of page_view events
+    productViews UInt32,         -- URL matches /all-products/product/<id>
+    urlMostActive String,        -- URL with highest activity
+
+    -- Optional ingestion version
+    _version UInt64 DEFAULT 1
+)
+ENGINE = ReplacingMergeTree(_version)
+ORDER BY (sessionId);
+
 -- CREATE TABLE analytics.visitors (
 --   visitorId String,
 --   date Date,
@@ -52,7 +84,7 @@ CREATE TABLE analytics.active_sessions
 )
 ENGINE = ReplacingMergeTree(_version)
 ORDER BY sessionId
-TTL lastEventTime + INTERVAL 20 MINUTE DELETE;
+TTL lastEventTime + INTERVAL 8 MINUTE DELETE;
 
 
 
@@ -67,7 +99,7 @@ SELECT
     timestamp AS lastEventTime,
     eventType AS lastEventType,
     url,
-    toUnixTimestamp(timestamp) AS version
+    toUnixTimestamp(timestamp) AS _version
 FROM kafka.events;
 
 
@@ -117,4 +149,3 @@ SELECT * FROM "kafka"."events" order by timestamp desc limit 100
 
 
 
-y

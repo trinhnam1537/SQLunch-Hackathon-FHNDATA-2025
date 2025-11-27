@@ -307,30 +307,47 @@ class homeController {
   }
 
 
+  // async getActiveUsersRealtime(req, res) {
+  //   try {
+  //     // Query ClickHouse via the shared client
+  //     const sql = `
+  //       SELECT count(sessionId) AS active
+  //       FROM analytics.active_sessions FINAL
+  //       WHERE lastEventType <> 'page_exit'
+  //     `;
+
+  //     const result = await clickhouse.query({
+  //       query: sql,
+  //       format: 'JSONEachRow'
+  //     });
+
+  //     const rows = await result.json();
+
+  //     return res.json({
+  //       current: rows.length > 0 ? rows[0].active : 0
+  //     });
+
+  //   } catch (error) {
+  //     console.error("ClickHouse realtime error:", error);
+  //     return res.json({ error: error.message });
+  //   }
+  // }
+
   async getActiveUsersRealtime(req, res) {
     try {
-      // Query ClickHouse via the shared client
-      const sql = `
-        SELECT count() AS active
-        FROM analytics.active_sessions
-        WHERE lastEventType != 'page_exit'
-      `;
-
-      const result = await clickhouse.query({
-        query: sql,
-        format: 'JSONEachRow'
-      });
-
-      const rows = await result.json();
+      // Count keys matching "active:*"
+      const keys = await redisClient.keys("active:*");
+      const activeCount = keys.length;
 
       return res.json({
-        current: rows.length > 0 ? rows[0].active : 0
+        current: activeCount
       });
 
     } catch (error) {
-      console.error("ClickHouse realtime error:", error);
-      return res.json({ error: error.message });
+      console.error("Redis realtime error:", error);
+      return res.json({ current: 0 });
     }
   }
+
 }
 module.exports = new homeController

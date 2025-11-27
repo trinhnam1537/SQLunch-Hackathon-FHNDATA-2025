@@ -30,11 +30,27 @@
 
 
 {{!-- import the new tracking script --}}
-  <script src="/js/helpers/getLog.js"></script>  
+ 
   <script src="/js/user/tracking.js"></script>
 {{!-- end of new imports  --}}
 
   <title>{{title}}</title>
+
+{{!-- <!-- Matomo -->
+<script>
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//localhost/matomo/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code --> --}}
 </head>
 <body>
   <div class="preloader">
@@ -46,9 +62,7 @@
   <div>{{> fixedComponents}}</div>
   <footer>{{> userFooter}}</footer>
   <headerBottom style="display: none;">{{> userHeaderBottom}}</headerBottom>
-</body>
-</html>
 
-<script src="https://unpkg.com/popper.js@1"></script>
+  <script src="https://unpkg.com/popper.js@1"></script>
 <script src="https://unpkg.com/tippy.js@5"></script>
 <script src="/js/tippy.js"></script>

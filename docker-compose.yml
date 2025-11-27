@@ -70,7 +70,56 @@ services:
     cpus: 1.0
 
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  # mariadb:
+  #   image: mariadb:10.11
+  #   container_name: matomo-mariadb
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: admin
+  #     MYSQL_DATABASE: admin
+  #     MYSQL_USER: admin
+  #     MYSQL_PASSWORD: admin
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+    
+
+  # matomo:
+  #   image: matomo:latest
+  #   depends_on:
+  #     - mariadb
+  #   ports:
+  #     - "80:80"         # HTTP
+  #     - "443:443"       # HTTPS
+  #   environment:
+  #     MATOMO_DATABASE_HOST: mariadb
+  #     MATOMO_DATABASE_USERNAME: admin
+  #     MATOMO_DATABASE_PASSWORD: admin
+  #     MATOMO_DATABASE_DBNAME: admin
+  #   volumes:
+  #     - matomo_data:/var/www/html
+  #     - ./matomo_config/certs:/etc/matomo/certs:ro
+  #     - ./matomo_config/ssl.conf:/etc/apache2/sites-enabled/ssl.conf:ro
+  #   command: >
+  #     bash -c "
+  #       a2enmod ssl &&
+  #       apache2-foreground
+  #     "
+
+
 
 volumes:
   clickhouse_data:
   clickhouse_logs:
+  db_data:
+  matomo_data:
