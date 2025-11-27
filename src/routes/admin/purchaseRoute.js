@@ -14,6 +14,6 @@ router.post('/data/purchases'   , purchaseController.getPurchases)
 router.post('/data/purchase'    , purchaseController.getPurchase)
 router.post('/data/filter'      , purchaseController.getFilter)
 router.post('/data/suppliers'   , purchaseController.getSuppliers)
-router.post('/data/materials'   , purchaseController.getMaterials)
+router.post('/data/products'    , purchaseController.getProducts)
 
 module.exports = router

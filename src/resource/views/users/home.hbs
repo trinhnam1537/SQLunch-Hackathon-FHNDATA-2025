@@ -39,12 +39,14 @@
       {{> product}}
     {{/each}}
   </div>
+  
+  <a href="/all-products/isFlashDeal/true" class="view-all-btn">View All Flash Deals</a>
 </div>
 
 <div class="products-board" id="top-sale">
-  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm bán chạy">
-    <i class="fi fi-sr-trophy-star"></i>
-    <div><a href="/all-products?saleNumber=-1" class="main-title"><b>SẢN PHẨM BÁN CHẠY</b></a></div>
+  <div class="title">
+    <div><a href="/all-products/isTopSelling/true" class="main-title"><b>TOP SELLING PRODUCTS</b></a></div>
+    <p class="subtitle">Loved by thousands of customers</p>
   </div>
   
   <div class="products">
@@ -52,12 +54,14 @@
       {{> product}}
     {{/each}}
   </div>
+  
+  <a href="/all-products/isTopSelling/true" class="view-all-btn">View All Top Selling</a>
 </div>
 
-<div class="products-board" id="hot-sale">
-  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm đang hot">
-    <i class="fi fi-sr-flame"></i>
-    <div><a href="/all-products/status/hot" class="main-title"><b>SẢN PHẨM HOT</b></a></div>
+<div class="products-board" id="new-arrival">
+  <div class="title">
+    <div><a href="/all-products/isNewArrival/true" class="main-title"><b>NEW ARRIVAL PRODUCTS</b></a></div>
+    <p class="subtitle">The trendiest products right now</p>
   </div>
   
   <div class="products">
@@ -65,32 +69,8 @@
       {{> product}}
     {{/each}}
   </div>
-</div>
-
-<div class="products-board" id="skincare">
-  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm skincare">
-    <i class="fi fi-sr-spray-can"></i>
-    <div><a href="/all-products/categories/skincare" class="main-title"><b>SẢN PHẨM SKINCARE</b></a></div>
-  </div>
   
-  <div class="products">
-    {{#each (holderData 5)}}
-      {{> product}}
-    {{/each}}
-  </div>
-</div>
-
-<div class="products-board" id="makeup">
-  <div class="title" data-tippy-content="Xem toàn bộ sản phẩm makeup">
-    <i class="fi fi-sr-lipstick"></i>
-    <div><a href="/all-products/categories/makeup" class="main-title"><b>SẢN PHẨM MAKEUP</b></a></div>
-  </div>
-  
-  <div class="products">
-    {{#each (holderData 5)}}
-      {{> product}}
-    {{/each}}
-  </div>
+  <a href="/all-products/isNewArrival/true" class="view-all-btn">View All New Release Products</a>
 </div>
 
 <div class="products-board" id="all">

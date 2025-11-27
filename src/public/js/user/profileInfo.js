@@ -461,8 +461,8 @@ function orderAction(orderId) {
   actionBox.setAttribute('class', 'action-box')
   actionBox.innerHTML = `
     <div class="actions">
-      <button class="confirmation-button">Xác nhận đã nhận đơn hàng</button>
-      <a target="_blank" rel="noopener noreferrer" href="/all-orders/order/${orderId}">Xem Chi Tiết</a>
+      <button class="confirmation-button">Confirm Order Received</button>
+      <a target="_blank" rel="noopener noreferrer" href="/all-orders/order/${orderId}">View details</a>
       <button 
         id="delete-button" 
         type="button" 

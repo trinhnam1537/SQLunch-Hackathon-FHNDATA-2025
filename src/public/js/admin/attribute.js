@@ -28,7 +28,7 @@ async function createAttribute(id, rowIndex) {
 
   row.querySelector('td:last-child').innerHTML = `
     <button id="${id}" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-    <button id="${id}" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+    <button class =  id="${id}" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
   `
   return
 }
@@ -156,9 +156,15 @@ async function getMembership() {
       </thead>
       <thead>
         <tr>
+<<<<<<< HEAD
           <td>Mã</td>
           <td>Tên</td>
           <td>Thao tác</td>
+=======
+          <td>Code</td>
+          <td>Name</td>
+          <td>Actions</td>
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
         </tr>
       <tbody>
         ${data.map(item => 
@@ -167,8 +173,8 @@ async function getMembership() {
               <td><input type="text" id="code" value="${item.code}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
-                <button id="membership" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-                <button id="membership" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+                <button class = "update-btn" id="membership" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
+                <button class="delete-btn" id="membership" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-trash"></i></button>
               </td>
             </tr>
           `
@@ -196,9 +202,16 @@ async function getOrderStatus() {
       </thead>
       <thead>
         <tr>
+<<<<<<< HEAD
           <td>Mã</td>
           <td>Tên</td>
           <td>Thao tác</td>
+=======
+          <td>Order</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Actions</td>
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
         </tr>
       <tbody>
         ${data.map(item => 
@@ -207,8 +220,8 @@ async function getOrderStatus() {
               <td><input type="text" id="code" value="${item.code}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
-                <button id="order-status" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-                <button id="order-status" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+                <button class = "update-btn" id="order-status" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
+                <button class="delete-btn" id="order-status" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-trash"></i></button>
               </td>
             </tr>
           `
@@ -236,9 +249,15 @@ async function getPaymentMethod() {
       </thead>
       <thead>
         <tr>
+<<<<<<< HEAD
           <td>Mã</td>
           <td>Tên</td>
           <td>Thao tác</td>
+=======
+          <td>Code</td>
+          <td>Name</td>
+          <td>Actions</td>
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
         </tr>
       <tbody>
         ${data.map(item => 
@@ -247,8 +266,8 @@ async function getPaymentMethod() {
               <td><input type="text" id="code" value="${item.code}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
-                <button id="payment-method" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-                <button id="payment-method" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+                <button class = "update-btn" id="payment-method" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
+                <button class="delete-btn" id="payment-method" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-trash"></i></button>
               </td>
             </tr>
           `
@@ -276,10 +295,17 @@ async function getPosition() {
       </thead>
       <thead>
         <tr>
+<<<<<<< HEAD
           <td style="width: 23%;">Mã</td>
           <td style="width: 30%;">Lương</td>
           <td style="width: 30%;">Tên</td>
           <td style="width: 17%;">Thao tác</td>
+=======
+          <td style="width: 23%;">Code</td>
+          <td style="width: 30%;">Salary</td>
+          <td style="width: 30%;">Name</td>
+          <td style="width: 17%;">Actions</td>
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
         </tr>
       <tbody>
         ${data.map(item => 
@@ -289,8 +315,8 @@ async function getPosition() {
               <td><input type="text" id="wage" value="${formatNumber(item.wage)}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
-                <button id="position" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-                <button id="position" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+                <button class = "update-btn" id="position" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
+                <button class="delete-btn" id="position" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-trash"></i></button>
               </td>
             </tr>
           `
@@ -318,9 +344,9 @@ async function getProductStatus() {
       </thead>
       <thead>
         <tr>
-          <td>Mã</td>
-          <td>Tên</td>
-          <td>Thao tác</td>
+          <td>Code</td>
+          <td>Name</td>
+          <td>Actions</td>
         </tr>
       <tbody>
         ${data.map(item => 
@@ -329,8 +355,8 @@ async function getProductStatus() {
               <td><input type="text" id="code" value="${item.code}" disabled></td>
               <td><input type="text" id="name" value="${item.name}" disabled></td>
               <td>
-                <button id="product-status" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>
-                <button id="product-status" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-tr-trash-slash"></i></button>
+              <button class="update-btn" id="product-status" onclick="updateAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-refresh"></i></button>                
+              <button class="delete-btn" id="product-status" onclick="deleteAttribute(this.id, this.parentElement.parentElement.rowIndex)"><i class="fi fi-rr-trash"></i></button>
               </td>
             </tr>
           `
@@ -359,7 +385,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     
     await getProductStatus()
   } catch (error) {
-    console.error('Có lỗi xảy ra:', error)
-    pushNotification('Có lỗi xảy ra')
+    console.error('There is an error:', error)
+    pushNotification('There is an error')
   }
 })

@@ -7,6 +7,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -49,15 +50,19 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-vouchers/data/vouchers', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -80,9 +85,33 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
     // header
     const trHead = document.createElement("tr")
 
-    const headData = document.createElement('td')
-    headData.textContent = 'STT'
-    trHead.appendChild(headData)
+  const headData = document.createElement('td')
+  headData.textContent = 'NO'
+  trHead.appendChild(headData)
+
+  selected.forEach(col => {
+    const td = document.createElement("td")
+    td.textContent = col.name
+    trHead.appendChild(td)
+  })
+
+  const headLink = document.createElement('td')
+  headLink.textContent = 'Actions'
+  trHead.appendChild(headLink)
+
+  thead.appendChild(trHead)
+
+  // body
+  tbody.querySelectorAll('tr').forEach((tr, index) => {
+    tr.remove()
+  })
+
+  data.forEach((item, index) => {
+    const newTr = document.createElement('tr')
+
+    const itemData = document.createElement('td')
+    itemData.textContent = index + (currentPage - 1) * itemsPerPage + 1
+    newTr.appendChild(itemData)
 
     selected.forEach(col => {
       const td = document.createElement("td")
@@ -90,9 +119,12 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
       trHead.appendChild(td)
     })
 
-    const headLink = document.createElement('td')
-    headLink.textContent = 'Chi tiết'
-    trHead.appendChild(headLink)
+    const openButton = document.createElement('td')
+    openButton.style.textAlign = 'center'
+    openButton.innerHTML = `<button class="view-btn" title="View details"><i class="fi fi-rr-eye"></i></button>`
+    openButton.onclick = async function() {
+      await openVoucherDetail(item._id)
+    }
 
     thead.appendChild(trHead)
 

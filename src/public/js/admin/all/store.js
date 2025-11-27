@@ -7,6 +7,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -36,15 +37,19 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-stores/data/stores', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -54,12 +59,55 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
 
   document.querySelector('div.board-title').querySelector('p').textContent = 'đại lý: ' + dataSize.size
 
-  window.setTimeout(function() {
-    tbody.querySelectorAll('tr').forEach((tr, index) => {
-      tr.remove()
+  // Rebuild THEAD
+  thead.querySelectorAll('tr').forEach(tr => tr.remove())
+  const trHead = document.createElement('tr')
+  const thNo = document.createElement('td')
+  thNo.textContent = 'No'
+  trHead.appendChild(thNo)
+  selected.forEach(col => {
+    const th = document.createElement('td')
+    th.textContent = col.name
+    trHead.appendChild(th)
+  })
+  const thAction = document.createElement('td')
+  thAction.textContent = 'Actions'
+  trHead.appendChild(thAction)
+  thead.appendChild(trHead)
+
+  // Rebuild TBODY
+  tbody.querySelectorAll('tr').forEach(tr => tr.remove())
+
+  data.forEach((item, index) => {
+    const rowIndex = index + (currentPage - 1) * itemsPerPage + 1
+    const tr = document.createElement('tr')
+
+    const tdNo = document.createElement('td')
+    tdNo.textContent = rowIndex
+    tr.appendChild(tdNo)
+
+    selected.forEach(col => {
+      const td = document.createElement('td')
+      let value = item[col.value] ?? ''
+
+      if (col.value === 'revenue') {
+        td.textContent = formatNumber(value)
+        td.style.textAlign = 'right'
+      } else {
+        td.textContent = value
+      }
+
+      tr.appendChild(td)
     })
 
-    let productIndex = (currentPage - 1) * 10 + 1
+    const tdAction = document.createElement('td')
+    tdAction.style.textAlign = 'center'
+    tdAction.innerHTML = `<button class="view-btn" title="View details"><i class="fi fi-rr-eye"></i></button>`
+    tdAction.onclick = () => openStoreDetail(item._id)
+    tr.appendChild(tdAction)
+
+    tbody.appendChild(tr)
+  })
 
     data.forEach((item, index) => {
       const newTr = document.createElement('tr')

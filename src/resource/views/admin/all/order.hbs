@@ -13,13 +13,7 @@
   
   <div class="control-bar">
     <div class="search">
-      <select id="search-type" class="search-btn">
-        <option value="">Tìm kiếm theo</option>
-        <option value="_id" selected>ID</option>
-        <option value="customerInfo.userId">Mã khách hàng</option>
-        <option value="customerInfo.name">Tên khách hàng</option>
-      </select>
-      <input type="text" id="search-input" name="name" placeholder="Tìm kiếm đơn hàng" />
+      <input type="text" id="search-input" name="name" placeholder="Search order" />
     </div>
 
     <div class="sort-filter">
@@ -85,6 +79,258 @@
   </div>
 
   <span class="pagination"></span>
+</div>
+
+<div class="admin-create-order-container" id="create-modal">
+  <div id="form">
+    <div class="form-title">
+      <p>Add New Order</p>
+    </div>
+    <div class="form-group">
+      <label for="orderDate">Sale Date *</label>
+      <input type="date" id="orderDate" name="orderDate" required>
+    </div>
+    <div class="form-group">
+      <label for="userId">Select Customer</label>
+      <select name="userId" id="userId" required>
+        <option value="" selected disabled>-- Customer --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="paymentMethod">Select Payment Method</label>
+      <select name="paymentMethod" id="paymentMethod" required>
+        <option value="" selected disabled>-- Payment Method --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="note">Notes</label>
+      <input type="text" id="note" name="note">
+    </div>
+    <div class="form-group">
+      <label>Select Product</label>
+      <input type="text"  id="product-search" placeholder="Enter product name">
+    </div>
+    <div class="products-match"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <td style="width:  5%;">No.</td>
+          <td style="width: 40%;">Product</td>
+          <td style="width: 15%; text-align:right">Unit Price</td>
+          <td style="width: 10%;">Quantity</td>
+          <td style="width: 15%; text-align:right">Total Amount</td>
+          <td style="width: 10%;"></td>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: right">0</td>
+        <td></td>
+      </tfoot>
+    </table>  
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="order-details-container" id="detail-modal">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">ORDER INFORMATION</td></tr>
+      </thead>
+      <tr>
+        <td>Order Code</td>
+        <td><input type="text" id="id" disabled></td>
+      </tr>
+      <tr>
+        <td>Order Date</td>
+        <td><input type="text" id="date" disabled></td>
+      </tr>
+      <tr>
+        <td>Customer</td>
+        <td style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="name" disabled>
+          <a id="customer-link" href="" target="_blank">View</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Phone</td>
+        <td><input type="text" id="phone" disabled></td>
+      </tr>
+      <tr>
+        <td>Address</td>
+        <td><input type="text" id="address" disabled></td>
+      </tr>
+      <tr>
+        <td>Notes</td>
+        <td><input type="text" id="note" disabled></td>
+      </tr>
+      <tr>
+        <td>Payment Method</td>
+        <td><select name="paymentMethod" id="paymentMethod"></select></td>
+      </tr>
+      <tr>
+        <td>Total Price</td>
+        <td><input type="text" id="total" disabled></td>
+      </tr>
+      <tr>
+        <td>Total After Discount</td>
+        <td><input type="text" id="new-total" disabled></td>
+      </tr>
+      <tr>
+        <td>Order Status</td>
+        <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Rating Status</td>
+        <td><input name="status" id="isRated" disabled></input></td>
+      </tr>
+      <tr>
+        <td>Payment Status</td>
+        <td>
+          <select name="status" id="isPaid">
+            <option value="false" disabled>Not Paid</option>
+            <option value="true" disabled>Paid</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+
+    <table id="table-2">
+      <thead>
+        <tr><td colspan="5">ORDER DETAILS</td></tr>
+      </thead>
+      <thead>
+        <tr>
+          <td>STT</td>
+          <td>Product Name</td>
+          <td>Số Lượng</td>
+          <td>Giá</td>
+          <td>Details</td>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="product-details-container" id="detail-modal">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">PRODUCT INFORMATION</td></tr>
+      </thead>
+      <tr>
+        <td>Product ID</td>
+        <td><input type="text" id="id" disabled></td>
+      <tr>
+      <tr>
+        <td>Product Type</td>
+        <td>
+          <select name="categories" id="categories">
+            <option value="skincare">Skincare</option>
+            <option value="makeup">Makeup</option>
+          </select>
+          <select name="subcategories" id="subcategories">
+            <option value="xit-khoang">Xịt Khoáng</option>
+            <option value="mat-na">Mặt Nạ</option>
+            <option value="serum">Serum</option>
+            <option value="bha">BHA</option>
+            <option value="tay-da-chet">Tẩy Da Chết</option>
+            <option value="duong-da">Dưỡng Da</option>  
+            <option value="toner">Toner</option>
+            <option value="nuoc-tay-trang">Nước Tẩy Trang</option>
+            <option value="cham-mun">Chấm Mụn</option>
+            <option value="kem-duong-am">Kem Dưỡng Ẩm</option>
+            <option value="sua-rua-mat">Sữa Rửa Mặt</option>
+            <option value="phan-ma">Phấn Má</option>
+            <option value="mascara">Mascara</option>
+            <option value="ke-mat">Kẻ Mắt</option>
+            <option value="kem-chong-nang">Kem Chống Nắng</option>
+            <option value="che-khuyet-diem">Che Khuyết Điểm</option>
+            <option value="son">Son</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Brand</td>
+        <td><select name="brand" id="brand"></select></td>
+      <tr>
+        <td>Name</td>
+        <td><input type="text" id="name"></td>
+      </tr>
+      <tr>
+        <td>Purchase Price</td>
+        <td><input type="text" id="purchasePrice"></td>
+      </tr>
+      <tr>
+        <td>Old Price</td>
+        <td><input type="text" id="oldPrice"></td>
+      </tr>
+      <tr>
+        <td>New Price</td>
+        <td><input type="text" id="price"></td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td><input type="text" id="description"></td>
+      </tr>
+      <tr>
+        <td>Details</td>
+        <td><input type="text" id="details"></td>
+      </tr>
+      <tr>
+        <td>Usage Guide</td>
+        <td><input type="text" id="guide"></td>
+      </tr>
+      <tr>
+        <td>Quantity</td>
+        <td><input type="text" id="quantity"></td>
+      </tr>
+      <tr>
+        <td>Rating</td>
+        <td><input type="text" id="rate" disabled></td>
+      </tr>
+      <tr>
+        <td>Sales Count</td>
+        <td><input type="text" id="saleNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Rating Count</td>
+        <td><input type="text" id="rateNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Product Status</td>
+        <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Product Image</td>
+        <td>
+          <img src="" alt="loading" id="image">
+          <input type="file" name="img" id="img"/>
+        </td>
+      </tr>
+    </table>
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="/js/admin/all/order.js"></script>

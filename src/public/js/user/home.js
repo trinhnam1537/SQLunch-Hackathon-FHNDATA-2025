@@ -8,7 +8,7 @@ async function getVouchers() {
   }
 
   if (!window.isLoggedIn) return
-  document.querySelector('div[class="vouchers-board"][id="voucher"]').style.display = 'block'
+  document.querySelector('div[class="vouchers-board"][id="voucher"]').style.display = 'flex'
 
   try {
     const response = await fetch('/data/vouchers', {

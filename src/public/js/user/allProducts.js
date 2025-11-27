@@ -11,28 +11,35 @@ const filterOptions    = { deletedAt: null, [urlSlug[0]]: urlSlug[1] }
 const currentPage      = { page: 1 }
 
 const titles = {
-  'flash-sale': 'Dòng sản phẩm đang sale',
-  'hot': 'Dòng sản phẩm đang hot',
-  'new-arrival': 'Dòng sản phẩm mới về',
-  'xit-khoang': 'Dòng sản phẩm Xịt khoáng',
-  'mat-na': 'Dòng sản phẩm Mặt nạ',
-  'serum': 'Dòng sản phẩm Serum',
-  'bha': 'Dòng sản phẩm Bha',
-  'tay-da-chet': 'Dòng sản phẩm Tẩy da chết',
-  'duong-da': 'Dòng sản phẩm Dưỡng da',
-  'toner': 'Dòng sản phẩm toner',
-  'nuoc-tay-trang': 'Dòng sản phẩm Nước tẩy trang',
-  'cham-mun': 'Dòng sản phẩm Chấm mụn',
-  'kem-duong-am': 'Dòng sản phẩm Kem dưỡng ẩm',
-  'sua-rua-mat': 'Dòng sản phẩm Sữa rửa mặt',
-  'phan-ma': 'Dòng sản phẩm Phấn má',
-  'mascara': 'Dòng sản phẩm mascara',
-  'ke-mat': 'Dòng sản phẩm Kẻ mắt',
-  'kem-chong-nang': 'Dòng sản phẩm Kem chống nắng',
-  'che-khuyet-diem': 'Dòng sản phẩm Che khuyết điểm',
-  'son': 'Dòng sản phẩm son',
-  'makeup': 'Dòng sản phẩm makeup',
-  'skincare': 'Dòng sản phẩm skincare'
+  'xit-khoang': 'Mineral Mist Products',
+  'mat-na': 'Mask Products',
+  'serum': 'Serum Products',
+  'bha': 'BHA Products',
+  'tay-da-chet': 'Exfoliator Products',
+  'duong-da': 'Moisturizer Products',
+  'toner': 'Toner Products',
+  'nuoc-tay-trang': 'Cleansing Water Products',
+  'cham-mun': 'Spot Treatment Products',
+  'kem-duong-am': 'Moisturizing Cream Products',
+  'sua-rua-mat': 'Facial Cleanser Products',
+  'phan-ma': 'Blush Products',
+  'mascara': 'Mascara Products',
+  'ke-mat': 'Eyeliner Products',
+  'kem-chong-nang': 'Sunscreen Products',
+  'che-khuyet-diem': 'Concealer Products',
+  'son': 'Lipstick Products',
+  'makeup': 'Makeup Products',
+  'skincare': 'Skincare Products',
+}
+
+if (urlSlug[1] === 'true') {
+  if (urlSlug[0] === 'isFlashDeal') {
+    mainTitle.innerText = 'Flash Deal Products'
+  } else if (urlSlug[0] === 'isNewArrival') {
+    mainTitle.innerText = 'New Arrival Products'
+  } else if (urlSlug[0] === 'isTopSelling') {
+    mainTitle.innerText = 'TopSelling Products'
+  }
 }
 
 if (titles[urlSlug[1]]) mainTitle.innerText = titles[urlSlug[1]]

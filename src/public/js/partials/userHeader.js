@@ -70,6 +70,12 @@ function setDisplay(width, menu) {
   else menu.style.display = 'flex'
 }
 
+searchIcon.addEventListener('click', () => {
+  searchInput.classList.toggle('open')
+  searchInput.focus()
+  searchProducts.classList.remove("open")
+});
+
 // create input element
 searchIcon.onclick = function() {
   if(searchInput.style.display === 'none') return searchInput.style.display = ''
@@ -82,19 +88,21 @@ let timer
 searchInput.oninput = async function(event) {
   searchProducts.style.display = 'none'
   searchProducts.querySelectorAll('div.product').forEach(element => element.remove())
-  if (event.target.value.trim() === '') return
-
+  
   clearTimeout(timer)
   timer = setTimeout(async function() {
+    if (event.target.value.trim() === '') return
     const response = await fetch('/data/search', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ query: event.target.value})
+      body: JSON.stringify({ searchQuery: event.target.value})
     })
     if (!response.ok) throw new Error(`Response status: ${response.status}`)
     const {data} = await response.json()
 
-    searchProducts.style.display = ''
+    console.log(data)
+
+    searchProducts.classList.add("open")
 
     data.forEach((element) => {
       const div = document.createElement('div')

@@ -354,13 +354,108 @@ async function loadData(retriesLeft) {
 
 loadData(5)
 
-// setTimeout(() => {
-//   getLog(
-//     topic = 'product-view', 
-//     value = {
-//       "user_id"   : window.uid,
-//       "product_id": urlSlug,
-//       "timestamp" : new Date(),
-//     }
-//   )
-// }, 1000)
+// ==================== RELATED PRODUCTS TABS ==================== 
+const tabButtons = document.querySelectorAll('.tab-btn')
+const relatedSections = {
+  category: document.getElementById('related-category'),
+  type: document.getElementById('related-type'),
+  brand: document.getElementById('related-brand'),
+  viewed: document.getElementById('related-viewed'),
+  recommended: document.getElementById('related-recommended')
+}
+
+tabButtons.forEach(button => {
+  button.addEventListener('click', async (e) => {
+    const tabType = e.currentTarget.dataset.tab
+    
+    // Update active button
+    tabButtons.forEach(btn => btn.classList.remove('active'))
+    e.currentTarget.classList.add('active')
+    
+    // Hide all sections
+    Object.values(relatedSections).forEach(section => {
+      section.style.display = 'none'
+    })
+    
+    // Load and show selected section
+    const selectedSection = relatedSections[tabType]
+    selectedSection.style.display = 'grid'
+    
+    // Load data if not already loaded
+    if (selectedSection.querySelector('.loading-placeholder')) {
+      await loadRelatedProducts(tabType, selectedSection)
+    }
+  })
+})
+
+// Load related products based on type
+async function loadRelatedProducts(type, container) {
+  try {
+    let endpoint = ''
+    let filter = { productId: productInfo._id }
+
+    if (type === 'category') {
+      // Get category from current product (already loaded)
+      endpoint = '/all-products/data/related-category'
+      filter.categories = productInfo.categories
+    } else if (type === 'type') {
+      endpoint = '/all-products/data/related-type'
+      filter.categories = productInfo.categories
+      filter.type = productInfo.skincare ? productInfo.skincare : productInfo.makeup
+    } else if (type === 'brand') {
+      endpoint = '/all-products/data/related-brand'
+      filter.brand = productInfo.brand
+    } else if (type === 'viewed') {
+      endpoint = '/all-products/data/related-viewed'
+      filter = {}
+    } else if (type === 'recommended') {
+      endpoint = '/all-products/data/related-recommended'
+      filter = {}
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filter)
+    })
+
+    const data = await response.json()
+    
+    if (data.data && data.data.length > 0) {
+      // Clear loading placeholder
+      container.innerHTML = ''
+      
+      // Add products
+      data.data.forEach(product => {
+        const productHTML = createProductCard(product)
+        container.innerHTML += productHTML
+      })
+    } else {
+      container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No products found</p>'
+    }
+  } catch (error) {
+    console.error('Error loading related products:', error)
+    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 20px; color: red;">Error loading products</p>'
+  }
+}
+
+// Helper function to create product card HTML
+function createProductCard(product) {
+  return `
+    <a href="/all-products/product/${product._id}">
+      <div class="product">
+        <div class="loading"></div>
+        <span class="discount-badge">${formatPercentage((product.oldPrice - product.price) / product.oldPrice * 100)}</span>
+        <img loading="lazy" src="${product.img.path}" alt="${product.img.name}">
+        <del><p id="old-price">${formatNumber(product.oldPrice)}</p></del>
+        <p id="price">${formatNumber(product.price)}</p>
+        <p id="name">${product.name}</p>
+        <p id="rate">
+          <i class="fi fi-ss-star"></i>
+          <span id="rate-score">${formatRate(product.rate)}</span> 
+        </p>
+        <p id="sale-number">${'Sold: ' + product.saleNumber}</p>
+      </div>
+    </a>
+  `
+}

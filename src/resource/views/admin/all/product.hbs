@@ -14,13 +14,7 @@
 
   <div class="control-bar">
     <div class="search">
-      <select id="search-type" class="search-btn">
-        <option value="">Tìm kiếm theo</option>
-        <option value="_id" selected>ID</option>
-        <option value="name">Tên</option>
-        <option value="brand">Thương hiệu</option>
-      </select>
-      <input type="text" id="search-input" name="name" placeholder="Tìm kiếm sản phẩm" />
+      <input type="text" id="search-input" name="name" placeholder="Search product" />
     </div>
 
     <div class="sort-filter">
@@ -92,22 +86,262 @@
         {{/each}}
       </tbody>
     </table>
-
-    <div id="id01" class="modal">
-      <form class="modal-content">
-        <div class="container">
-          <p><strong>Xoá sản phẩm ?</strong></p>
-          <p id="confirm-message"></p>
-          <div class="clearfix">
-            <button id="delete-button" type="button" class="deletebtn">Xoá</button>
-            <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Huỷ</button>
-          </div>
-        </div>
-      </form>
-    </div>
   </div>
 
   <span class="pagination"></span>
+</div>
+
+<div class="admin-create-product-container" id="create-modal">
+  <div id="form">
+    <div class="form-title">
+      <p>Add New Product</p>
+    </div>
+
+    <div class="form-group">
+      <label></label>
+      <select name="categories">
+        <option value="">-- Select Product Line --</option>
+        <option value="skincare">Skincare</option>
+        <option value="makeup">Makeup</option>
+      </select>
+    </div>
+
+    <div class="form-group" style="display: none;">
+      <label></label>
+      <select name="subcategories">
+        <option value="">-- Skincare --</option>
+        <option value="xit-khoang">Facial Mist</option>
+        <option value="mat-na">Face Mask</option>
+        <option value="serum">Serum</option>
+        <option value="bha">BHA</option>
+        <option value="tay-da-chet">Exfoliant</option>
+        <option value="duong-da">Skincare</option>
+        <option value="toner">Toner</option>
+        <option value="nuoc-tay-trang">Makeup Remover</option>
+        <option value="cham-mun">Acne Spot Treatment</option>
+        <option value="kem-duong-am">Moisturizer</option>
+        <option value="sua-rua-mat">Facial Cleanser</option>
+      </select>
+    </div>
+
+    <div class="form-group" style="display: none;">
+      <label></label>
+      <select name="subcategories">
+        <option value="">-- Makeup --</option>
+        <option value="phan-ma">Blush</option>
+        <option value="mascara">Mascara</option>
+        <option value="ke-mat">Eyeliner</option>
+        <option value="kem-chong-nang">Sunscreen</option>
+        <option value="che-khuyet-diem">Concealer</option>
+        <option value="son">Lipstick</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label></label>
+      <select id="brand" name="brand">
+        <option value="">-- Select Brand --</option>
+        {{#each brands}}
+        <option value="{{this.name}}">{{this.name}}</option>
+        {{/each}}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="name">Product Name</label>
+      <input type="text" class="form-control" id="name" name="name" placeholder="e.g. HYDRA B5 MAX SERUM PRETTYSKIN">
+    </div>
+
+    <div class="form-group">
+      <label for="purchasePrice">Purchase Price</label>
+      <input type="text" class="form-control" id="purchasePrice" name="purchasePrice" placeholder="e.g. 1,000,000">
+    </div>
+
+    <div class="form-group">
+      <label for="oldPrice">Product Price (Old)</label>
+      <input type="text" class="form-control" id="oldPrice" name="oldPrice" placeholder="e.g. 1,000,000">
+    </div>
+
+    <div class="form-group">
+      <label for="price">Product Price (New)</label>
+      <input type="text" class="form-control" id="price" name="price" placeholder="e.g. 250,000">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Product Description</label>
+      <input type="text" class="form-control" id="description" name="description" placeholder="e.g. HYDRA B5 MAX SERUM PRETTYSKIN">
+    </div>
+
+    <div class="form-group">
+      <label for="details">Product Details</label>
+      <input type="text" class="form-control" id="details" name="details" placeholder="e.g. Deep moisturizing with Hyaluronic Acid...">
+    </div>
+
+    <div class="form-group">
+      <label for="guide">Usage Instructions</label>
+      <input type="text" class="form-control" id="guide" name="guide" placeholder="e.g. Step 1: Clean your face with a gentle cleanser...">
+    </div>
+    
+    <div class="form-group">
+      <label for="quantity">Quantity</label>
+      <input type="text" class="form-control" id="quantity" name="quantity" placeholder="e.g. 100">
+    </div>
+
+    <div class="form-group">
+      <label>Product Image</label>
+      <input type="file" name="img" id="img"/>
+    </div>
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Complete</button>
+    </div>
+  </div>
+</div>
+
+<div class="product-details-container" id="detail-modal">
+  <div id="form">
+    <table id="table-1">
+      <thead>
+        <tr><td colspan="2">PRODUCT INFORMATION</td></tr>
+      </thead>
+      <tr>
+        <td>Product ID</td>
+        <td><input type="text" id="id" disabled></td>
+      <tr>
+      <tr>
+        <td>Product Categories</td>
+        <td>
+          <select name="categories" id="categories">
+            <option value="skincare">Skincare</option>
+            <option value="makeup">Makeup</option>
+          </select>
+          <select name="subcategories" id="subcategories">
+            <option value="" selected></option>
+            <option value="xit-khoang">Xịt Khoáng</option>
+            <option value="mat-na">Mặt Nạ</option>
+            <option value="serum">Serum</option>
+            <option value="bha">BHA</option>
+            <option value="tay-da-chet">Tẩy Da Chết</option>
+            <option value="duong-da">Dưỡng Da</option>  
+            <option value="toner">Toner</option>
+            <option value="nuoc-tay-trang">Nước Tẩy Trang</option>
+            <option value="cham-mun">Chấm Mụn</option>
+            <option value="kem-duong-am">Kem Dưỡng Ẩm</option>
+            <option value="sua-rua-mat">Sữa Rửa Mặt</option>
+            <option value="" selected></option>
+            <option value="phan-ma">Phấn Má</option>
+            <option value="mascara">Mascara</option>
+            <option value="ke-mat">Kẻ Mắt</option>
+            <option value="kem-chong-nang">Kem Chống Nắng</option>
+            <option value="che-khuyet-diem">Che Khuyết Điểm</option>
+            <option value="son">Son</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Brand</td>
+        <td><select name="brand" id="brand"></select></td>
+      <tr>
+        <td>Name</td>
+        <td><input type="text" id="name"></td>
+      </tr>
+      <tr>
+        <td>Purchase Price</td>
+        <td><input type="text" id="purchasePrice"></td>
+      </tr>
+      <tr>
+        <td>Old Price</td>
+        <td><input type="text" id="oldPrice"></td>
+      </tr>
+      <tr>
+        <td>New Price</td>
+        <td><input type="text" id="price"></td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td><input type="text" id="description"></td>
+      </tr>
+      <tr>
+        <td>Details</td>
+        <td><input type="text" id="details"></td>
+      </tr>
+      <tr>
+        <td>Usage Guide</td>
+        <td><input type="text" id="guide"></td>
+      </tr>
+      <tr>
+        <td>Quantity</td>
+        <td><input type="text" id="quantity"></td>
+      </tr>
+      <tr>
+        <td>Rating</td>
+        <td><input type="text" id="rate" disabled></td>
+      </tr>
+      <tr>
+        <td>Sales Count</td>
+        <td><input type="text" id="saleNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Rating Count</td>
+        <td><input type="text" id="rateNumber" disabled></td>
+      </tr>
+      <tr>
+        <td>Product Status</td>
+        <td><select name="status" id="status"></select></td>
+      </tr>
+      <tr>
+        <td>Flash Deal ?</td>
+        <td>
+          <select name="isFlashDeal" id="isFlashDeal">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>New Arrival ?</td>
+        <td>
+          <select name="isNewArrival" id="isNewArrival">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Product Image</td>
+        <td>
+          <img src="" alt="loading" id="image">
+          <input type="file" name="img" id="img"/>
+        </td>
+      </tr>
+    </table>
+
+    <div class="submit-button">
+      <button class="close-modal">Close</button>
+      <button type="submit">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="id01">
+  <div class="modal-content">
+    <div class="modal-header">
+      <i class="fi fi-rr-exclamation"></i>
+      <h3>Confirm Delete</h3>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-message" style="font-weight:600; color:#dc2626;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="cancelbtn" onclick="document.getElementById('id01').style.display='none'">
+        Cancel
+      </button>
+      <button class="deletebtn" id="deletebtn">
+        Delete
+      </button>
+    </div>
+  </div>
 </div>
 
 <form style="display: none;" name="delete-form" method="post"></form>

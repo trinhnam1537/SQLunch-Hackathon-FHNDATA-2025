@@ -293,6 +293,221 @@ div.submit-button button:hover {
     transform: translate(-50%, -30px);
   }
 }
+
+/* Primary / Submit button */
+div.submit-button button,
+button.primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+}
+div.submit-button button:hover,
+button.primary:hover {
+  background-color: #1e4d5a;
+  transform: translateY(-2px);
+}
+
+/* Loading state */
+button.loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+button.loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--primary-foreground);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: reloader 0.8s infinite linear;
+}
+
+/* ---------- Notification ---------- */
+div.notification {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 280px;
+  max-width: 90%;
+  background: var(--card);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  z-index: 9999;
+  opacity: 0;
+  animation: notification 4s ease forwards;
+  font-weight: 500;
+}
+
+/* ---------- Modal ---------- */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.25s ease;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 460px;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: popUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Header */
+.modal-header {
+  padding: 24px 28px 16px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+.modal-header i {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.modal-header.success i   { color: #10b981; }
+.modal-header.danger i    { color: #ef4444; }
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111;
+}
+
+/* Body */
+.modal-body {
+  padding: 20px 28px 24px;
+  text-align: center;
+}
+.modal-body p {
+  margin: 8px 0;
+  color: #444;
+  line-height: 1.5;
+}
+.product-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 12px 0;
+  word-break: break-word;
+}
+.note {
+  font-size: 0.92rem;
+  color: #666;
+  margin-top: 12px;
+}
+.note.warning {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Footer */
+.modal-footer {
+  padding: 16px 28px 28px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-footer button {
+  min-width: 120px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.cancelbtn {
+  background: #f3f4f6;
+  color: #374151;
+}
+.cancelbtn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.restorebtn {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+.restorebtn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.deletebtn {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+.deletebtn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes popUp {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ---------- Pagination ---------- */
+span.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+span.pagination p {
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.25s ease;
+}
+span.pagination p:hover {
+  background: var(--muted);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+span.pagination p.current {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(43, 99, 119, 0.25);
+}
+
+/* ---------- Animations ---------- */
 @keyframes reloader {
   to { transform: rotate(360deg); }
 }

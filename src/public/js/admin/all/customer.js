@@ -7,6 +7,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -50,15 +51,19 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-customers/data/customers', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })  
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -81,9 +86,39 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
     // header
     const trHead = document.createElement("tr")
 
+<<<<<<< HEAD
     const headData = document.createElement('td')
     headData.textContent = 'STT'
     trHead.appendChild(headData)
+=======
+  const headData = document.createElement('td')
+  headData.textContent = 'No'
+  trHead.appendChild(headData)
+
+  selected.forEach(col => {
+    const td = document.createElement("td")
+    td.textContent = col.name
+    trHead.appendChild(td)
+  })
+
+  const headLink = document.createElement('td')
+  headLink.textContent = 'Actions'
+  trHead.appendChild(headLink)
+
+  thead.appendChild(trHead)
+
+  // BODY
+  tbody.querySelectorAll('tr').forEach((tr, index) => {
+    tr.remove()
+  })
+
+  data.forEach((item, index) => {
+    const newTr = document.createElement('tr')
+
+    const itemData = document.createElement('td')
+    itemData.textContent = index + (currentPage - 1) * itemsPerPage + 1
+    newTr.appendChild(itemData)
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
 
     selected.forEach(col => {
       const td = document.createElement("td")
@@ -91,9 +126,18 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
       trHead.appendChild(td)
     })
 
+<<<<<<< HEAD
     const headLink = document.createElement('td')
     headLink.textContent = 'Chi tiết'
     trHead.appendChild(headLink)
+=======
+    const openButton = document.createElement('td')
+    openButton.style.textAlign = 'center'
+    openButton.innerHTML = `<button class="view-btn" title="View details"><i class="fi fi-rr-eye"></i></button>`
+    openButton.onclick = async function() {
+      await openCustomerDetail(item._id)
+    }
+>>>>>>> bbb95b9 (Update UI: chuyen button View/Delete/Update sang icon dep hon)
 
     thead.appendChild(trHead)
 
@@ -140,9 +184,324 @@ changeColumns.onclick = function() {
   columnLists.style.display === 'none' ? columnLists.style.display = 'block' : columnLists.style.display = 'none'
 }
 
-// submitChange.onclick = async function() {
-//   await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
-// }
+// DETAIL MODAL
+const detailModal       = document.querySelector('#detail-modal')
+const detailCloseBtn    = detailModal.querySelector('.close-modal')
+const detailUpdateBtn   = detailModal.querySelector('button[type="submit"]')
+let currentCustomerInfo = null  // Store current customer info for comparison
+
+detailCloseBtn.onclick = () => detailModal.classList.remove('show')
+detailModal.onclick = (e) => {
+  if (e.target === detailModal) detailModal.classList.remove('show')
+}
+
+async function openCustomerDetail(customerId) {
+  try {
+    detailModal.classList.add('show')
+    
+    // Fetch customer data
+    const response = await fetch('/admin/all-customers/data/customer', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: customerId})
+    })
+    
+    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    const {error, customerInfo, memberInfo, orderInfo} = await response.json()
+    if (error) {
+      pushNotification('An error occurred')
+      detailModal.classList.remove('show')
+      return
+    }
+
+    document.title = customerInfo.name
+
+    detailModal.querySelector('input[name="id"]').value = customerInfo._id || ''
+    detailModal.querySelector('input[name="name"]').value = customerInfo.name || ''
+    detailModal.querySelector('input[name="email"]').value = customerInfo.email || ''
+    detailModal.querySelector('input[name="phone"]').value = customerInfo.phone || ''
+    detailModal.querySelector('input[name="address"]').value = customerInfo.address || ''
+    detailModal.querySelector('input[name="dob"]').value = customerInfo.dob === null ? null : customerInfo.dob.split('T')[0]
+    
+    detailModal.querySelectorAll('input[name="gender"]').forEach((input) => {
+      if (input.value === customerInfo.gender) input.checked = true
+    })
+    
+    detailModal.querySelector('input[name="quantity"]').value = customerInfo.quantity || ''
+    detailModal.querySelector('input[name="revenue"]').value = formatNumber(customerInfo.revenue) || ''
+    detailModal.querySelector('input[name="member"]').value = memberInfo.name || ''
+
+    const tbody = detailModal.querySelector('table#table-2').querySelector('tbody')
+    tbody.innerHTML = ''
+    
+    orderInfo.forEach((order, index) => {
+      const tr = document.createElement('tr')
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${formatNumber(order.totalOrderPrice)}</td>
+        <td>${order.paymentMethod.name}</td>
+        <td>${order.orderStatus.name}</td>
+        <td style="text-align:center">
+          <button class="view-order-btn" data-id="${order._id}"><i class="fi fi-rr-eye"></i></button>
+        </td>
+      `
+      tbody.appendChild(tr)
+    })
+
+    // Store customer info for update comparison
+    currentCustomerInfo = {
+      _id: customerInfo._id,
+      name: customerInfo.name,
+      phone: customerInfo.phone,
+      address: customerInfo.address,
+      gender: customerInfo.gender,
+      dob: customerInfo.dob === null ? null : customerInfo.dob.split('T')[0]
+    }
+
+    return
+
+  } catch (error) {
+    console.error('Error opening customer detail:', error)
+    pushNotification('An error occurred')
+    detailModal.classList.remove('show')
+  }
+}
+
+// UPDATE MODAL
+async function updateCustomer() {
+  const name    = detailModal.querySelector('input[name="name"]').value
+  const phone   = detailModal.querySelector('input[name="phone"]').value
+  const address = detailModal.querySelector('input[name="address"]').value
+  const dob     = detailModal.querySelector('input[name="dob"]')?.value || null
+  const gender  = detailModal.querySelector('input[name="gender"]:checked')?.value || ''
+
+  // Check if any field has changed
+  if (
+    name    === currentCustomerInfo.name    &&
+    phone   === currentCustomerInfo.phone   &&
+    address === currentCustomerInfo.address &&
+    gender  === currentCustomerInfo.gender  &&
+    dob     === currentCustomerInfo.dob
+  ) return pushNotification('Please update the information')
+
+  detailUpdateBtn.classList.add('loading')
+  const response = await fetch('/admin/all-customers/customer/updated', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      id      : currentCustomerInfo._id,
+      name    : name,
+      phone   : phone,
+      address : address,
+      dob     : dob,
+      gender  : gender
+    })
+  })
+  if (!response.ok) throw new Error(`Response status: ${response.status}`)
+  const {error, message} = await response.json()
+
+  if (error) {
+    detailUpdateBtn.classList.remove('loading')
+    return pushNotification(error)
+  }  
+
+  pushNotification(message)
+  detailUpdateBtn.classList.remove('loading')
+  detailModal.classList.remove('show')
+  await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
+}
+
+detailUpdateBtn.onclick = function() {
+  updateCustomer()
+}
+
+// CREATE MODAL
+const createModal     = document.querySelector('#create-modal')
+const createBtn       = document.querySelector('.create-btn')
+const createCloseBtn  = createModal.querySelector('.close-modal')
+const createSubmitBtn = createModal.querySelector('button[type="submit"]')
+
+createBtn.onclick = () => createModal.classList.add('show')
+createCloseBtn.onclick  = () => createModal.classList.remove('show')
+createModal.onclick = (e) => {
+  if (e.target === createModal) createModal.classList.remove('show')
+}
+
+async function createCustomer() {
+  try {
+    const name     = createModal.querySelector('input#name').value
+    const email    = createModal.querySelector('input#email').value
+    const phone    = createModal.querySelector('input#phone').value
+    const address  = createModal.querySelector('input#address').value
+    const password = createModal.querySelector('input#password').value
+    const confirmPassword = createModal.querySelector('input#password-confirm').value
+
+    if (password !== confirmPassword) {
+      return pushNotification("Password and Confirm Password do not match!")
+    }
+
+    if (
+      !name     || 
+      !email    || 
+      !phone    || 
+      !address  || 
+      !password
+    ) {
+      return pushNotification("Please fill in all information!")
+    }
+
+    createSubmitBtn.classList.add('loading')
+    const response = await fetch('/admin/all-customers/customer/created', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        name    : name,
+        email   : email,
+        phone   : phone,
+        address : address,
+        password: password,
+      })
+    })
+    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    const {error, message} = await response.json()
+    if (error) throw new Error(error)
+
+    pushNotification(message)
+    createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
+    await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
+  } catch (error) {
+    console.error('Error creating customer:', error)
+    pushNotification("An error occurred.")
+    createSubmitBtn.classList.remove('loading')
+  }
+}
+
+createSubmitBtn.onclick = async function() {
+  await createCustomer()
+}
+
+const orderDetailModal = document.querySelector('div.order-details-container')
+
+// Đóng modal khi nhấn nút đóng hoặc nền
+orderDetailModal.addEventListener('click', e => {
+  if (e.target === orderDetailModal || e.target.classList.contains('close-modal')) {
+    orderDetailModal.classList.remove('show')
+  }
+})
+
+// Hàm mở chi tiết đơn hàng
+async function openOrderDetail(orderId) {
+  try {
+    orderDetailModal.classList.add('show')
+
+    const response = await fetch('/admin/all-orders/data/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: orderId })
+    })
+
+    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    const { error, orderInfo, orderStatuses, paymentMethods, userRole } = await response.json()
+    if (error) {
+      pushNotification('An error occurred')
+      orderDetailModal.classList.remove('show')
+      return
+    }
+
+    document.title = 'Order ' + (orderInfo.customerInfo?.name || 'Guest')
+
+    // Fill thông tin cơ bản
+    orderDetailModal.querySelector('input#id').value      = orderInfo._id
+    orderDetailModal.querySelector('input#date').value    = formatDate(orderInfo.createdAt)
+    orderDetailModal.querySelector('input#name').value    = orderInfo.customerInfo?.name || 'Guest'
+    orderDetailModal.querySelector('input#phone').value   = orderInfo.customerInfo?.phone || ''
+    orderDetailModal.querySelector('input#address').value = orderInfo.customerInfo?.address || ''
+    orderDetailModal.querySelector('input#note').value    = orderInfo.customerInfo?.note || ''
+
+    // Trạng thái đơn hàng
+    const statusSelect = orderDetailModal.querySelector('select#status')
+    statusSelect.innerHTML = ''
+    orderStatuses.forEach(s => {
+      const opt = document.createElement('option')
+      opt.value = s.code
+      opt.textContent = s.name
+      opt.disabled = true
+      if (s.code === orderInfo.status) opt.selected = true
+
+      // Phân quyền chỉnh sửa
+      if (userRole === 'employee' && s.code === 'preparing') opt.disabled = false
+      if (userRole === 'merchandise' && s.code === 'out_for_delivery') opt.disabled = false
+      if (['shipper'].includes(userRole) && ['delivering', 'delivered'].includes(s.code)) opt.disabled = false
+      if (userRole === 'manager' && s.code === 'cancel') opt.disabled = false
+      if (userRole === 'admin') opt.disabled = false
+
+      statusSelect.appendChild(opt)
+    })
+
+    // Phương thức thanh toán
+    const paymentSelect = orderDetailModal.querySelector('select#paymentMethod')
+    paymentSelect.innerHTML = ''
+    paymentMethods.forEach(p => {
+      const opt = document.createElement('option')
+      opt.value = p.code
+      opt.textContent = p.name
+      opt.disabled = true
+      if (p.code === orderInfo.paymentMethod) opt.selected = true
+      paymentSelect.appendChild(opt)
+    })
+
+    // Tổng tiền
+    orderDetailModal.querySelector('input#total').value      = formatNumber(orderInfo.totalOrderPrice)
+    orderDetailModal.querySelector('input#new-total').value  = formatNumber(orderInfo.totalNewOrderPrice)
+    orderDetailModal.querySelector('input#isRated').value    = orderInfo.isRated ? 'Yes' : 'No'
+
+    // Thanh toán
+    const isPaidSelect = orderDetailModal.querySelector('select#isPaid')
+    isPaidSelect.value = orderInfo.isPaid ? 'true' : 'false'
+    isPaidSelect.querySelectorAll('option').forEach(opt => opt.disabled = userRole !== 'accountant')
+
+    // Ẩn nút cập nhật nếu đã hoàn tất hoặc hủy
+    if (['done', 'cancel'].includes(orderInfo.status)) {
+      statusSelect.disabled = paymentSelect.disabled = true
+      orderDetailModal.querySelector('button[type="submit"]').style.display = 'none'
+    } else {
+      orderDetailModal.querySelector('button[type="submit"]').style.display = 'block'
+    }
+
+    // Danh sách sản phẩm
+    const productTbody = orderDetailModal.querySelector('table#table-2 tbody')
+    productTbody.innerHTML = ''
+    let i = 1
+    orderInfo.products?.forEach(p => {
+      const tr = document.createElement('tr')
+      tr.innerHTML = `
+        <td>${i++}</td>
+        <td style="display: flex; align-items: center; gap: 8px;">
+          <img src="${p.image}" alt="${p.name}" loading="lazy" style="width: 40px; height: 40px; object-fit: cover;">
+          ${p.name}
+        </td>
+        <td style="text-align: center;">${p.quantity}</td>
+        <td style="text-align: right;">${formatNumber(p.price)}</td>
+        <td><button class="view-product-btn" data-id="${p.id}"><i class="fi fi-rr-eye"></i></button></td>
+      `
+      productTbody.appendChild(tr)
+    })
+
+  } catch (err) {
+    console.error(err)
+    pushNotification('An error occurred while fetching order details.')
+    orderDetailModal.classList.remove('show')
+  }
+}
+
+// === HOẶC TỐT HƠN: Dùng event delegation (chỉ cần thêm 1 lần) ===
+detailModal.querySelector('table#table-2 tbody').addEventListener('click', e => {
+  if (e.target.classList.contains('view-order-btn')) {
+    const orderId = e.target.dataset.id
+    openOrderDetail(orderId)
+  }
+})
 
 window.addEventListener('DOMContentLoaded', async function loadData() {
   try {
