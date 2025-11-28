@@ -8,6 +8,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -53,15 +54,19 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-vouchers/data/vouchers', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -95,7 +100,7 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
   })
 
   const headLink = document.createElement('td')
-  headLink.textContent = 'Chi tiết'
+  headLink.textContent = 'Actions'
   trHead.appendChild(headLink)
 
   thead.appendChild(trHead)
@@ -126,7 +131,7 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
 
     const openButton = document.createElement('td')
     openButton.style.textAlign = 'center'
-    openButton.innerHTML = `<button id="${item._id}">View</button>`
+    openButton.innerHTML = `<button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>`
     openButton.onclick = async function() {
       await openVoucherDetail(item._id)
     }
