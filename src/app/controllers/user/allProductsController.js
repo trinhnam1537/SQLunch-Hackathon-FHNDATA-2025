@@ -1,5 +1,6 @@
 const product = require('../../models/productModel')
 const productStatuses = require('../../models/productStatusModel')
+const userView = require('../../models/userViewModel')
 const comment = require('../../models/commentModel')
 const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
 
@@ -81,8 +82,6 @@ class allProductsController {
       const productInfo = await product.find({ _id: { $ne: productId }, brand: brand }).sort({rate: -1}).lean().limit(5)
       if (!productInfo) return res.status(404).json({ error: "No products found" })
       
-      console.log(brand, productInfo)
-
       return res.json({data: productInfo})
       
     } catch (error) {
@@ -92,14 +91,33 @@ class allProductsController {
   
   async getRelatedViewed(req, res, next) {
     try {
+      const userId = req.cookies.uid
+      if (!userId) return res.json({ data: [] })
+
       const productId = req.body.productId
-      const productInfo = await product.find({ _id: { $ne: productId }, [categories]: type }).lean().limit(5)
-      if (!productInfo) return res.status(404).json({ error: "No products found" })
-      
-      return res.json({data: productInfo})
-      
+      const userViews = await userView
+        .find({
+          userId: userId,
+          productId: { $ne: productId }
+        })
+        .sort({ lastViewAt: -1 })
+        .limit(50)
+        .lean()
+
+      const productViewedIds = userViews.map(v => v.productId)
+      if (productViewedIds.length === 0) return res.json({ data: [] })
+
+      let products = await product.find({ _id: { $in: productViewedIds } }).lean()
+      const productMap = new Map(products.map(p => [String(p._id), p]))
+      const orderedProducts = productViewedIds
+        .map(id => productMap.get(String(id)))
+        .filter(Boolean)
+
+      return res.json({ data: orderedProducts })
+
     } catch (error) {
-      return res.json({error: error})
+      console.log("getRelatedViewed error:", error)
+      return res.status(500).json({ error: error.message })
     }
   }
   

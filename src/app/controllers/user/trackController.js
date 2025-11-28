@@ -1,11 +1,10 @@
 const Product = require('../../models/productModel')
+const userView = require('../../models/userViewModel')
 
 class trackController {
   async trackProductView(req, res) {
     try {
       const { productId, timeOnPage, sessionId, timestamp } = req.body
-
-      console.log(req.body)
 
       if (!productId) {
         return res.status(400).json({
@@ -46,6 +45,18 @@ class trackController {
       await product.save()
 
       console.log(`✅ Product view tracked: ${productId} (${timeOnPage}s) - viewCount: ${product.viewCount}`)
+
+      const userId = req.cookies.uid || null
+      if (userId) {
+        await userView.updateOne(
+          { userId, productId },
+          { 
+            $inc: { viewCount: 1 },
+            $set: { lastViewedAt: new Date() }
+          },
+          { upsert: true }
+        )
+      }
 
       return res.status(200).json({
         success: true,

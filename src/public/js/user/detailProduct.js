@@ -156,62 +156,6 @@ async function getComment() {
   rateProduct()
 }
 
-async function getRelatedProducts(productInfo) {
-  const response = await fetch('/all-products/data/related-products', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      productId: productInfo._id, 
-      categories: productInfo.categories, 
-      type: productInfo.skincare || productInfo.makeup})
-  })
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const {data} = await response.json()
-
-  window.setTimeout(function() {
-    relatedProducts.forEach((product, index) => {
-      if (index < data.length) {
-        product.querySelector('img').setAttribute('src', data[index].img.path)
-        product.querySelector('img').setAttribute('alt', data[index].img.name)
-        product.querySelector('p#old-price').textContent = formatNumber(data[index].oldPrice) 
-        product.querySelector('p#price').textContent = formatNumber(data[index].price) 
-        product.querySelector('p#name').textContent = data[index].name
-        product.querySelector('span#rate-score').textContent = Math.round(data[index].rate * 100) / 100
-        product.querySelector('p#sale-number').textContent =  'Sold: ' + data[index].saleNumber
-        product.querySelector('div.loading').style.display = 'none'
-        product.querySelectorAll('i').forEach((star, i) => {
-          if (i + 1 <= Math.floor(parseInt(product.querySelector('span#rate-score').innerText))) star.style.color = 'orange'
-        })
-        product.style.display = ''
-        product.parentElement.setAttribute('href', '/all-products/product/' + data[index]._id)
-      } else {
-        product.remove()
-      }
-    })
-  }, 2000)
-}
-
-async function pushDataToRecommendationSystem(data) {
-  try {
-    // Wait until window.isLoggedIn is assigned
-    while (typeof window.isLoggedIn === 'undefined' | typeof window.recommend_url === 'undefined') {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-  
-    if (!window.isLoggedIn) return
-  
-    const response = await fetch(`${window.recommend_url}/get_data`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({data: data, uid: window.uid})
-    })
-    if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  } catch (error) {
-    pushNotification(error)
-    console.log(error)
-  }
-}
-
 function increaseQuantity() {
   getIncreaseQuantity.onclick = function () {
     getQuantityValue.innerText++
@@ -340,8 +284,6 @@ async function loadData(retriesLeft) {
     increaseQuantity()
     decreaseQuantity()
     getComment()
-    // getRelatedProducts(productInfo)
-    pushDataToRecommendationSystem(data)
     await loadRelatedProducts('category', relatedSections.category)
   } catch (err) {
     if (retriesLeft > 1) {
@@ -412,7 +354,6 @@ async function loadRelatedProducts(type, container) {
       filter.brand = productInfo.brand
     } else if (type === 'viewed') {
       endpoint = '/all-products/data/related-viewed'
-      filter = {}
     } else if (type === 'recommended') {
       endpoint = '/all-products/data/related-recommended'
       filter = {}
