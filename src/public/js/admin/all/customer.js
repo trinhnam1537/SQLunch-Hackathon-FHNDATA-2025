@@ -8,6 +8,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -51,15 +52,19 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-customers/data/customers', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })  
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -94,7 +99,7 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
   })
 
   const headLink = document.createElement('td')
-  headLink.textContent = 'Details'
+  headLink.textContent = 'Actions'
   trHead.appendChild(headLink)
 
   thead.appendChild(trHead)
@@ -125,7 +130,7 @@ async function getCustomers(sortOptions, filterOptions, currentPage, itemsPerPag
 
     const openButton = document.createElement('td')
     openButton.style.textAlign = 'center'
-    openButton.innerHTML = `<button id="${item._id}">View</button>`
+    openButton.innerHTML = `<button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>`
     openButton.onclick = async function() {
       await openCustomerDetail(item._id)
     }
@@ -200,7 +205,7 @@ async function openCustomerDetail(customerId) {
         <td>${order.paymentMethod.name}</td>
         <td>${order.orderStatus.name}</td>
         <td style="text-align:center">
-          <button class="view-order-btn" data-id="${order._id}">View</button>
+          <button class="view-order-btn" data-id="${order._id}"><i class="fi fi-rr-eye"></i></button>
         </td>
       `
       tbody.appendChild(tr)
@@ -441,7 +446,7 @@ async function openOrderDetail(orderId) {
         </td>
         <td style="text-align: center;">${p.quantity}</td>
         <td style="text-align: right;">${formatNumber(p.price)}</td>
-        <td><button class="view-order-btn" data-id="${p.id}">View</button></td>
+        <td><button class="view-order-btn" data-id="${p.id}"><i class="fi fi-rr-eye"></i></button></td>
       `
       productTbody.appendChild(tr)
     })
