@@ -184,7 +184,7 @@ async function getOrders(fetchBody) {
         },
         title: {
           display: true,
-          text: 'ORDER STATUS'
+          text: 'Order Status'
         }
       }
     },
@@ -219,7 +219,7 @@ async function getOrders(fetchBody) {
         },
         title: {
           display: true,
-          text: 'ORDERS OVER TIME',
+          text: 'Orders Over Time',
           font: {
             size: 14,
             weight: 'bold'
@@ -294,7 +294,7 @@ async function getCustomers(fetchBody) {
         },
         title: {
           display: true,
-          text: 'HẠNG THÀNH VIÊN'
+          text: 'Member Rank'
         }
       }
     },
@@ -329,7 +329,7 @@ async function getCustomers(fetchBody) {
         },
         title: {
           display: true,
-          text: 'KHÁCH HÀNG THEO THỜI GIAN',
+          text: 'Customers Over Time',
           font: {
             size: 14,
             weight: 'bold'

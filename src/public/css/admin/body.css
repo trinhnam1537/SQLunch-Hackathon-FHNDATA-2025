@@ -84,8 +84,8 @@ p.trash a:hover, p.products a:hover {
 .search input,
 .sort select,
 .filter select {
-  padding: 10px 12px;
-  border: 2px solid #CCDFE3;
+  padding: 10px 15px;
+  border: 1.5px solid #CCDFE3;
   border-radius: 8px;
   font-size: 14px;
   background: transparent;
@@ -131,12 +131,14 @@ p.trash a:hover, p.products a:hover {
 }
 
 #clear-sort-filter:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(212, 24, 61, 0.25);
+    background-color: rgba(212, 24, 61, 0.05); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(212, 24, 61, 0.1); 
 }
 
 #clear-sort-filter:active {
-  transform: translateY(0);
+    transform: translateY(0);
+    background-color: rgba(212, 24, 61, 0.1); 
 }
 
 .create-btn {
@@ -288,7 +290,6 @@ table td {
 /* =========================================
    STYLE CHUNG CHO CÁC NÚT ICON
    ========================================= */
-/* Thêm .update-btn vào đây để xóa sạch stroke (border) */
 .view-btn, 
 .view-order-btn,
 .delete-btn,
@@ -308,32 +309,20 @@ table td {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --- MÀU SẮC RIÊNG --- */
-
-/* 1. Mắt (Xanh) */
 .view-btn, .view-order-btn { color: #2B6377; }
-
-/* 2. Thùng rác (Đỏ) */
 .delete-btn { color: #dc3545; }
-
-/* 3. Nút Refresh/Update (Cam) */
 .update-btn { 
-  color: #F28E2B; /* Hoặc màu xanh lá cây #59A14F nếu muốn */
+  color: #F28E2B; 
 }
 
-/* --- HOVER --- */
 .view-btn:hover, .view-order-btn:hover, .delete-btn:hover, .update-btn:hover {
   background: transparent !important;
   transform: translateY(-3px);
 }
-
-/* Hover nút Update -> Đổ bóng Cam */
 .update-btn:hover {
   color: #d67d26;
   filter: drop-shadow(0 5px 4px rgba(242, 142, 43, 0.35));
 }
-
-/* Hover các nút khác (Giữ nguyên như cũ) */
 .view-btn:hover, .view-order-btn:hover {
   color: #1a3f52; filter: drop-shadow(0 5px 4px rgba(43, 99, 119, 0.35));
 }
