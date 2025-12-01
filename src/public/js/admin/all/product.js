@@ -8,10 +8,11 @@ const sortOptions   = {}
 const filterOptions = { deletedAt: null }
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 // Soft Delete
 const deleteModal   = document.getElementById('id01')
-const deleteButton  = document.getElementById('delete-button')
+const deleteButton  = document.getElementById('deletebtn')
 let productToDelete = null
 
 function generateColumns() {
@@ -20,15 +21,17 @@ function generateColumns() {
     <label><input type="checkbox" value="_id"> Product Code</label>
     <label><input type="checkbox" value="img" checked> Image</label>
     <label><input type="checkbox" value="categories"> Category</label>
-    <label><input type="checkbox" value="skincare"> Skincare Line</label>
-    <label><input type="checkbox" value="makeup"> Makeup Line</label>
+    <label><input type="checkbox" value="subcategories"> Subcategories</label>
     <label><input type="checkbox" value="brand" checked> Brand</label>
     <label><input type="checkbox" value="name" checked> Product Name</label>
     <label><input type="checkbox" value="oldPrice" checked> Old Price</label>
     <label><input type="checkbox" value="price" checked> Current Price</label>
     <label><input type="checkbox" value="quantity" checked> Stock</label>
     <label><input type="checkbox" value="status"> Status</label>
+    <label><input type="checkbox" value="isFlashDeal"> FlashDeal</label>
+    <label><input type="checkbox" value="isNewArrival"> New Arrival</label>
     <label><input type="checkbox" value="rate"> Rating</label>
+    <label><input type="checkbox" value="viewCount"> View Count</label>
     <label><input type="checkbox" value="saleNumber"> Sales Count</label>
     <label><input type="checkbox" value="rateNumber"> Review Count</label>
   `
@@ -64,14 +67,24 @@ async function getProducts(sortOptions, filterOptions, currentPage, itemsPerPage
     }
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-products/data/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sort: sortOptions, filter: filterOptions, page: currentPage, itemsPerPage })
+    body: JSON.stringify(payload)
   })
 
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const { data, data_size, error } = await response.json()
+
   if (error) return pushNotification(error)
 
   dataSize.size = data_size
@@ -137,6 +150,9 @@ async function getProducts(sortOptions, filterOptions, currentPage, itemsPerPage
       }
       else if (col.value === 'brand') {
         td.textContent = item.brand?.name || value
+      } else if (col.value === 'viewCount') {
+        td.textContent = value ?? 0
+        td.style.textAlign = 'right'
       }
       else {
         td.textContent = value ?? ''
@@ -149,11 +165,8 @@ async function getProducts(sortOptions, filterOptions, currentPage, itemsPerPage
     const tdAction = document.createElement('td')
     tdAction.style.textAlign = 'center'
     tdAction.innerHTML = `
-      <button class="view-btn" id="${item._id}">View</button>
-      <button class="delete-btn" 
-              onclick="reply_click('${item._id}', '${item.name.replace(/'/g, "\\'")}')">
-        Delete
-      </button>
+      <button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>
+      <button class="delete-btn"><i class="fi fi-rr-trash"></i></button>
     `
     tdAction.querySelector('.view-btn').onclick = () => openProductDetail(item._id)
     tr.appendChild(tdAction)
@@ -162,12 +175,6 @@ async function getProducts(sortOptions, filterOptions, currentPage, itemsPerPage
   })
 
   pagination(getProducts, sortOptions, filterOptions, currentPage, dataSize.size)
-}
-
-function reply_click(id, name) {
-  productToDelete = id
-  document.querySelector('p#confirm-message').textContent = `Bạn có muốn xoá sản phẩm "${name}" không?`
-  deleteModal.style.display = 'block'
 }
 
 deleteButton.onclick = async function () {
@@ -185,7 +192,7 @@ deleteButton.onclick = async function () {
   deleteModal.style.display = 'none'
 
   if (!response.ok) {
-    pushNotification('Xóa thất bại')
+    pushNotification('Failed to delete')
     return
   }
 
@@ -249,6 +256,9 @@ async function openProductDetail(productId) {
     // Fill form
     detailModal.querySelector('input#id').value = productInfo._id
     detailModal.querySelector('select#categories').value = productInfo.categories || ''
+    detailModal.querySelector('select#subcategories').value = productInfo.subcategories || ''
+    detailModal.querySelector('select#isFlashDeal').value = productInfo.isFlashDeal 
+    detailModal.querySelector('select#isNewArrival').value = productInfo.isNewArrival 
     detailModal.querySelector('input#name').value = productInfo.name || ''
     detailModal.querySelector('input#oldPrice').value = formatNumber(productInfo.oldPrice)
     detailModal.querySelector('input#price').value = formatNumber(productInfo.price)
@@ -284,43 +294,10 @@ async function openProductDetail(productId) {
       statusSelect.appendChild(opt)
     })
 
-    // Hiển thị dòng sản phẩm phù hợp
-    detailModal.querySelector('select#categories').value = productInfo.categories
-
-    const skincareBox = detailModal.querySelector('select#skincare')
-    const makeupBox = detailModal.querySelector('select#makeup')
-    if (productInfo.categories === 'skincare') {
-      skincareBox.style.display = 'block'
-      makeupBox.style.display = 'none'
-      detailModal.querySelector('select#skincare').value = productInfo.skincare || ''
-    } else if (productInfo.categories === 'makeup') {
-      skincareBox.style.display = 'none'
-      makeupBox.style.display = 'block'
-      detailModal.querySelector('select#makeup').value = productInfo.makeup || ''
-    } else {
-      skincareBox.style.display = 'none'
-      makeupBox.style.display = 'none'
-    }
-
-    // Xử lý thay đổi category
-    detailModal.querySelector('select#categories').onchange = function () {
-      const val = this.value
-      if (val === 'skincare') {
-        skincareBox.style.display = 'block'
-        makeupBox.style.display = 'none'
-      } else if (val === 'makeup') {
-        skincareBox.style.display = 'none'
-        makeupBox.style.display = 'block'
-      } else {
-        skincareBox.style.display = 'none'
-        makeupBox.style.display = 'none'
-      }
-    }
-
     // Format số khi nhập
+    formatInputNumber(detailModal.querySelector('input#purchasePrice'))
     formatInputNumber(detailModal.querySelector('input#oldPrice'))
     formatInputNumber(detailModal.querySelector('input#price'))
-    formatInputNumber(detailModal.querySelector('input#purchasePrice'))
 
     // Lưu để so sánh khi update
     currentProductInfo = { ...productInfo }
@@ -336,8 +313,7 @@ async function updateProduct() {
   if (!currentProductInfo) return
 
   const categories    = detailModal.querySelector('select#categories').value
-  const skincare      = detailModal.querySelector('select#skincare').value || ''
-  const makeup        = detailModal.querySelector('select#makeup').value || ''
+  const subcategories    = detailModal.querySelector('select#subcategories').value
   const brand         = detailModal.querySelector('select#brand').value
   const name          = detailModal.querySelector('input#name').value.trim()
   const oldPrice      = deFormatNumber(detailModal.querySelector('input#oldPrice').value)
@@ -346,14 +322,15 @@ async function updateProduct() {
   const description   = detailModal.querySelector('input#description').value
   const details       = detailModal.querySelector('input#details').value
   const guide         = detailModal.querySelector('input#guide').value
-  const quantity      = detailModal.querySelector('input#quantity').value
+  const quantity      = parseInt(detailModal.querySelector('input#quantity').value)
   const status        = detailModal.querySelector('select#status').value
-
+  const isFlashDeal   = detailModal.querySelector('select#isFlashDeal').value === 'false' ? false : true
+  const isNewArrival  = detailModal.querySelector('select#isNewArrival').value === 'false' ? false : true
+  
   // Kiểm tra thay đổi
   if (
     categories === currentProductInfo.categories &&
-    skincare === (currentProductInfo.skincare || '') &&
-    makeup === (currentProductInfo.makeup || '') &&
+    subcategories === currentProductInfo.categories &&
     brand === currentProductInfo.brand &&
     name === currentProductInfo.name &&
     oldPrice == currentProductInfo.oldPrice &&
@@ -364,6 +341,8 @@ async function updateProduct() {
     guide === currentProductInfo.guide &&
     quantity == currentProductInfo.quantity &&
     status === currentProductInfo.status &&
+    isFlashDeal === currentProductInfo.isFlashDeal &&
+    isNewArrival === currentProductInfo.isNewArrival &&
     !imgPath.path
   ) {
     return pushNotification('Please update the information')
@@ -373,9 +352,9 @@ async function updateProduct() {
 
   const payload = {
     id: currentProductInfo._id,
-    categories, skincare, makeup, brand, name,
+    categories, subcategories, brand, name,
     oldPrice, price, purchasePrice,
-    description, details, guide, quantity, status
+    description, details, guide, quantity, status, isFlashDeal, isNewArrival
   }
   if (imgPath.path) payload.img = imgPath.path
 
@@ -388,7 +367,7 @@ async function updateProduct() {
   detailUpdateBtn.classList.remove('loading')
 
   if (!response.ok) {
-    pushNotification('Cập nhật thất bại')
+    pushNotification('Update failed')
     return
   }
 
@@ -410,22 +389,7 @@ const createCloseBtn  = createModal?.querySelector('.close-modal')
 const createSubmitBtn = createModal?.querySelector('button[type="submit"]')
 let createImgPath     = { path: '' }
 
-const selectBox    = createModal.querySelector('select[name="categories"]')
-const skincareBox  = createModal.querySelector('select[name="skincare"]').parentElement
-const makeUpBox    = createModal.querySelector('select[name="makeup"]').parentElement
-
-selectBox.onchange = function() {
-  const selectedValue = selectBox.options[selectBox.selectedIndex].value;
-  if (selectedValue === 'skincare') {
-    skincareBox.style.display = ''
-    makeUpBox.style.display = 'none'
-  }
-  if (selectedValue === 'makeup') {
-    skincareBox.style.display = 'none'
-    makeUpBox.style.display = ''
-  }
-}
-
+formatInputNumber(createModal.querySelector('input[name="purchasePrice"]'))
 formatInputNumber(createModal.querySelector('input[name="oldPrice"]'))
 formatInputNumber(createModal.querySelector('input[name="price"]'))
 
@@ -433,7 +397,6 @@ if (createBtn) createBtn.onclick = () => createModal.classList.add('show')
 if (createCloseBtn) createCloseBtn.onclick = () => createModal.classList.remove('show')
 createModal?.addEventListener('click', e => { if (e.target === createModal) createModal.classList.remove('show') })
 
-// Xử lý ảnh tạo mới
 createModal?.querySelector('input#img')?.addEventListener('change', function () {
   const file = this.files[0]
   if (file) {
@@ -444,19 +407,19 @@ createModal?.querySelector('input#img')?.addEventListener('change', function () 
 })
 
 async function createProduct() {
-  const categories  = createModal.querySelector('select[name="categories"]')?.value
-  const skincare    = createModal.querySelector('select[name="skincare"]')?.value || ''
-  const makeup      = createModal.querySelector('select[name="makeup"]')?.value || ''
-  const brand       = createModal.querySelector('select[name="brand"]')?.value
-  const name        = createModal.querySelector('input#name')?.value.trim()
-  const oldPrice    = deFormatNumber(createModal.querySelector('input#oldPrice')?.value || '0')
-  const price       = deFormatNumber(createModal.querySelector('input#price')?.value || '0')
-  const description = createModal.querySelector('input#description')?.value
-  const details     = createModal.querySelector('input#details')?.value
-  const guide       = createModal.querySelector('input#guide')?.value
-  const status      = createModal.querySelector('select[name="status"]')?.value
+  const categories    = createModal.querySelector('select[name="categories"]')?.value
+  const subcategories = createModal.querySelector('select[name="subcategories"]')?.value || ''
+  const brand         = createModal.querySelector('select[name="brand"]')?.value
+  const name          = createModal.querySelector('input#name')?.value.trim()
+  const purchasePrice = deFormatNumber(createModal.querySelector('input#purchasePrice')?.value || '0')
+  const oldPrice      = deFormatNumber(createModal.querySelector('input#oldPrice')?.value || '0')
+  const price         = deFormatNumber(createModal.querySelector('input#price')?.value || '0')
+  const description   = createModal.querySelector('input#description')?.value
+  const details       = createModal.querySelector('input#details')?.value
+  const guide         = createModal.querySelector('input#guide')?.value
+  const quantity      = createModal.querySelector('input#quantity')?.value
 
-  if (!categories || !brand || !name || !oldPrice || !price || !description || !details || !guide || !status || !createImgPath.path) {
+  if (!categories || !brand || !name || !purchasePrice || !oldPrice || !price || !description || !details || !guide || !quantity || !createImgPath.path) {
     return pushNotification('Please fill in all information!')
   }
 
@@ -464,8 +427,8 @@ async function createProduct() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      categories, skincare, makeup, brand, name,
-      oldPrice, price, description, details, guide, status,
+      categories, subcategories, brand, name, purchasePrice,
+      oldPrice, price, description, details, guide, quantity,
       img: createImgPath.path
     })
   })
@@ -489,9 +452,23 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     await getFilter()
     await getProducts(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getProducts, sortOptions, filterOptions, currentPage.page)
-    await exportJs('BÁO CÁO DANH SÁCH SẢN PHẨM')
+    await exportJs('PRODUCTS REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')
+  }
+})
+
+// Đặt ở cuối file, sau khi DOM load
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('delete-btn')) {
+    const row = e.target.closest('tr')
+    const productId = row.querySelector('.view-btn').id
+    const productName = row.querySelector('td:nth-child(3)')?.textContent || 'sản phẩm này'
+    
+    productToDelete = productId
+    document.querySelector('p#confirm-message').textContent = 
+      `Do you want to delete the product "${productName}"?`
+    deleteModal.style.display = 'flex'
   }
 })

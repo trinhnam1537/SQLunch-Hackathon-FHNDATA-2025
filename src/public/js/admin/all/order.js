@@ -8,6 +8,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -32,8 +33,15 @@ async function getFilter() {
     headers: { 'Content-Type': 'application/json' }
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const { orderStatus, paymentMethod, error } = await response.json()
+  const {customers, orderStatus, paymentMethod, error } = await response.json()
   if (error) return pushNotification(error)
+
+  customers.forEach(c => {
+    const opt = document.createElement('option')
+    opt.value = c._id
+    opt.textContent = `${c.name}: ${c.phone}`
+    document.querySelector('select#userId')?.appendChild(opt)
+  })
 
   orderStatus.forEach(s => {
     const opt = document.createElement('option')
@@ -46,7 +54,7 @@ async function getFilter() {
     const opt = document.createElement('option')
     opt.value = p.code
     opt.textContent = p.name
-    document.querySelector('select#paymentMethod')?.appendChild(opt)
+    document.querySelectorAll('select#paymentMethod').forEach(select => select.appendChild(opt.cloneNode(true)))
   })
 }
 
@@ -59,10 +67,19 @@ async function getOrders(sortOptions, filterOptions, currentPage, itemsPerPage) 
     }
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-orders/data/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sort: sortOptions, filter: filterOptions, page: currentPage, itemsPerPage })
+    body: JSON.stringify(payload)
   })
 
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -87,7 +104,7 @@ async function getOrders(sortOptions, filterOptions, currentPage, itemsPerPage) 
     trHead.appendChild(th)
   })
   const thAction = document.createElement('td')
-  thAction.textContent = 'Details'
+  thAction.textContent = 'Actions'
   trHead.appendChild(thAction)
   thead.appendChild(trHead)
 
@@ -95,7 +112,7 @@ async function getOrders(sortOptions, filterOptions, currentPage, itemsPerPage) 
   tbody.querySelectorAll('tr').forEach(tr => tr.remove())
 
   data.forEach((item, index) => {
-    const rowIndex = index + (currentPage.page - 1) * itemsPerPage + 1
+    const rowIndex = index + (currentPage - 1) * itemsPerPage + 1
     const tr = document.createElement('tr')
 
     const tdNo = document.createElement('td')
@@ -131,7 +148,7 @@ async function getOrders(sortOptions, filterOptions, currentPage, itemsPerPage) 
 
     const tdAction = document.createElement('td')
     tdAction.style.textAlign = 'center'
-    tdAction.innerHTML = `<button id="${item._id}">View</button>`
+    tdAction.innerHTML = `<button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>`
     tdAction.onclick = () => openOrderDetail(item._id)
     tr.appendChild(tdAction)
 
@@ -253,7 +270,7 @@ async function openOrderDetail(orderId) {
         </td>
         <td style="text-align: center;">${p.quantity}</td>
         <td style="text-align: right;">${formatNumber(p.price)}</td>
-        <td><a href="/admin/all-products/product/${p.id}">Xem</a></td>
+        <td><button class="view-product-btn" data-id="${p.id}"><i class="fi fi-rr-eye"></i></button></td>
       `
       productTbody.appendChild(tr)
     })
@@ -326,6 +343,93 @@ if (createBtn) createBtn.onclick = () => createModal.classList.add('show')
 if (createCloseBtn) createCloseBtn.onclick = () => createModal.classList.remove('show')
 createModal?.addEventListener('click', e => { if (e.target === createModal) createModal.classList.remove('show') })
 
+// Product Detail Modal
+const productDetailModal = document.querySelector('div.product-details-container')
+
+productDetailModal?.addEventListener('click', e => {
+  if (e.target === productDetailModal || e.target.classList.contains('close-modal')) {
+    productDetailModal.classList.remove('show')
+  }
+})
+
+async function openProductDetail(productId) {
+  try {
+    productDetailModal.classList.add('show')
+
+    const response = await fetch('/admin/all-products/data/product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: productId })
+    })
+
+    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    const { error, productInfo, brands, productStatuses } = await response.json()
+    if (error) {
+      pushNotification('An error occurred')
+      detailModal.classList.remove('show')
+      return
+    }
+
+    document.title = productInfo.name || 'Product Detail'
+
+    // Fill form
+    productDetailModal.querySelector('input#id').value = productInfo._id
+    productDetailModal.querySelector('select#categories').value = productInfo.categories || ''
+    productDetailModal.querySelector('select#subcategories').value = productInfo.subcategories || ''
+    productDetailModal.querySelector('input#name').value = productInfo.name || ''
+    productDetailModal.querySelector('input#oldPrice').value = formatNumber(productInfo.oldPrice)
+    productDetailModal.querySelector('input#price').value = formatNumber(productInfo.price)
+    productDetailModal.querySelector('input#purchasePrice').value = formatNumber(productInfo.purchasePrice || 0)
+    productDetailModal.querySelector('input#description').value = productInfo.description || ''
+    productDetailModal.querySelector('input#details').value = productInfo.details || ''
+    productDetailModal.querySelector('input#guide').value = productInfo.guide || ''
+    productDetailModal.querySelector('input#quantity').value = productInfo.quantity || 0
+    productDetailModal.querySelector('input#rate').value = formatRate(productInfo.rate) + '/5'
+    productDetailModal.querySelector('input#saleNumber').value = productInfo.saleNumber || 0
+    productDetailModal.querySelector('input#rateNumber').value = productInfo.rateNumber || 0
+    productDetailModal.querySelector('img#image').src = productInfo.img?.path || '/images/default-product.png'
+
+    // Brand
+    const brandSelect = productDetailModal.querySelector('select#brand')
+    brandSelect.innerHTML = ''
+    brands.forEach(b => {
+      const opt = document.createElement('option')
+      opt.value = b.name
+      opt.textContent = b.name
+      if (b.name === productInfo.brand) opt.selected = true
+      brandSelect.appendChild(opt)
+    })
+
+    // Status
+    const statusSelect = productDetailModal.querySelector('select#status')
+    statusSelect.innerHTML = ''
+    productStatuses.forEach(s => {
+      const opt = document.createElement('option')
+      opt.value = s.code
+      opt.textContent = s.name
+      if (s.code === productInfo.status) opt.selected = true
+      statusSelect.appendChild(opt)
+    })
+
+    // Format số khi nhập
+    formatInputNumber(productDetailModal.querySelector('input#purchasePrice'))
+    formatInputNumber(productDetailModal.querySelector('input#oldPrice'))
+    formatInputNumber(productDetailModal.querySelector('input#price'))
+  } catch (err) {
+    console.error('Error opening product detail:', err)
+    pushNotification('An error occurred')
+    productDetailModal.classList.remove('show')
+  }
+}
+
+// === HOẶC TỐT HƠN: Dùng event delegation (chỉ cần thêm 1 lần) ===
+detailModal.querySelector('table#table-2 tbody').addEventListener('click', e => {
+  if (e.target.classList.contains('view-product-btn')) {
+    const productId = e.target.dataset.id
+    openProductDetail(productId)
+  }
+})
+  
 // DOM Loaded
 window.addEventListener('DOMContentLoaded', async function loadData() {
   try {
@@ -333,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     await getFilter()
     await getOrders(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getOrders, sortOptions, filterOptions, currentPage.page)
-    await exportJs('BÁO CÁO DANH SÁCH ĐƠN HÀNG')
+    await exportJs('ORDER LIST')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')

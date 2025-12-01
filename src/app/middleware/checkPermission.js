@@ -4,13 +4,11 @@ const attributePermission = permission.attributePermission
 const brandPermission     = permission.brandPermission
 const blogPermission      = permission.blogPermission
 const chatPermission      = permission.chatPermission
-const chatEmpPermission   = permission.chatEmpPermission
 const customerPermission  = permission.customerPermission
 const employeePermission  = permission.employeePermission
 const homePermission      = permission.homePermission
 const orderPermission     = permission.orderPermission
 const productPermission   = permission.productPermission
-const materialPermission  = permission.materialPermission
 const purchasePermission  = permission.purchasePermission
 const storePermission     = permission.storePermission
 const supplierPermission  = permission.supplierPermission
@@ -85,20 +83,6 @@ class chatClass {
     if (await checkPermission(req, res, chatPermission, 'DELETE')) next();
   }
 }
-class chatEmpClass {
-  async create(req, res, next) {
-    if (await checkPermission(req, res, chatEmpPermission, 'CREATE')) next();
-  }
-  async read(req, res, next) {
-    if (await checkPermission(req, res, chatEmpPermission, 'READ')) next();
-  }
-  async update(req, res, next) {
-    if (await checkPermission(req, res, chatEmpPermission, 'UPDATE')) next();
-  }
-  async delete(req, res, next) {
-    if (await checkPermission(req, res, chatEmpPermission, 'DELETE')) next();
-  }
-}
 class customerClass {
   async create(req, res, next) {
     if (await checkPermission(req, res, customerPermission, 'CREATE')) next();
@@ -169,20 +153,6 @@ class productClass {
     if (await checkPermission(req, res, productPermission, 'DELETE')) next();
   }
 }
-class materialClass {
-  async create(req, res, next) {
-    if (await checkPermission(req, res, materialPermission, 'CREATE')) next();
-  }
-  async read(req, res, next) {
-    if (await checkPermission(req, res, materialPermission, 'READ')) next();
-  }
-  async update(req, res, next) {
-    if (await checkPermission(req, res, materialPermission, 'UPDATE')) next();
-  }
-  async delete(req, res, next) {
-    if (await checkPermission(req, res, materialPermission, 'DELETE')) next();
-  }
-}
 class purchaseClass {
   async create(req, res, next) {
     if (await checkPermission(req, res, purchasePermission, 'CREATE')) next();
@@ -245,13 +215,11 @@ module.exports = {
   brandClass    : new brandClass,
   blogClass     : new blogClass,
   chatClass     : new chatClass,
-  chatEmpClass  : new chatEmpClass,
   customerClass : new customerClass,
   employeeClass : new employeeClass,
   homeClass     : new homeClass,
   orderClass    : new orderClass,
   productClass  : new productClass,
-  materialClass : new materialClass,
   purchaseClass : new purchaseClass,
   storeClass    : new storeClass,
   supplierClass : new supplierClass,

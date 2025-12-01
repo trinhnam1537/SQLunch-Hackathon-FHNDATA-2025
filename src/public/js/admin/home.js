@@ -1,5 +1,38 @@
 importLinkCss('/css/admin/home.css')
 
+// Dashboard Navigator Setup
+function initDashboardNavigator() {
+  const dashboardBtns = document.querySelectorAll('.dashboard-btn')
+  const tables = document.querySelectorAll('.admin-home-container div.table')
+  const tableGroups = document.querySelectorAll('.admin-home-container div.tables')
+
+  dashboardBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const dashboard = this.dataset.dashboard
+
+      // Remove active class from all buttons
+      dashboardBtns.forEach(b => b.classList.remove('active'))
+      // Add active class to clicked button
+      this.classList.add('active')
+
+      // Hide all tables
+      tables.forEach(table => table.classList.remove('active'))
+      tableGroups.forEach(group => group.classList.remove('active'))
+
+      // Show selected dashboard table
+      const targetTable = document.querySelector(`.admin-home-container div.table.${dashboard}`)
+      const targetGroup = document.querySelector(`.admin-home-container div.tables.${dashboard}`)
+
+      if (targetTable) targetTable.classList.add('active')
+      if (targetGroup) targetGroup.classList.add('active')
+    })
+  })
+
+  // Set finance as default active
+  const financeBtn = document.querySelector('.dashboard-btn[data-dashboard="finance"]')
+  if (financeBtn) financeBtn.click()
+}
+
 async function getFinance(fetchBody) {
   const response = await fetch('/admin/all/data/finance', fetchBody)
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -30,11 +63,11 @@ async function getFinance(fetchBody) {
     </tbody>
   `
 
-  if (document.querySelector('div.finance').contains(document.querySelector("table"))) {
+  if (document.querySelector('div.table.finance').querySelector('div.finance').contains(document.querySelector("table"))) {
     document.querySelector("table").remove()
   }
 
-  document.querySelector('div.finance').appendChild(table)
+  document.querySelector('div.table.finance').querySelector('div.finance').appendChild(table)
 }
 
 async function getOrders(fetchBody) {
@@ -56,7 +89,7 @@ async function getOrders(fetchBody) {
     </tbody>
   `
 
-  const orderDiv = document.querySelector('div.order')
+  const orderDiv = document.querySelector('div.table.order').querySelector('div.order')
   const oldTable = orderDiv.querySelector("table")
 
   if (oldTable) oldTable.remove()
@@ -73,7 +106,7 @@ async function getOrders(fetchBody) {
         },
         title: {
           display: true,
-          text: 'ORDER STATUS'
+          text: 'Order Status'
         }
       }
     },
@@ -90,29 +123,55 @@ async function getOrders(fetchBody) {
   
   const orderCtx = document.getElementById("order")
   Chart.getChart(orderCtx)?.destroy()
+  
+  // Prepare data for line chart
+  const orderDates = Array.from(new Set(data.map(order => formatDate(order.createdAt))))
+  const orderCounts = orderDates.map(date => 
+    data.filter(order => formatDate(order.createdAt) === date).length
+  )
+  
   new Chart(orderCtx, {
-    type: 'bar',
+    type: 'line',
     options: {
+      responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: {
           display: false
         },
         title: {
           display: true,
-          text: 'ORDERS OVER TIME'
+          text: 'Orders Over Time',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
         }
       }
     },
     data: {
-      labels: Array.from(new Set(data.map(order => formatDate(order.createdAt)))),
+      labels: orderDates,
       datasets: [{
-        data: data.map(order => order.createdAt).reduce((acc, date) => {
-          const formattedDate = formatDate(date)
-          acc[formattedDate] = (acc[formattedDate] || 0) + 1
-          return acc
-        }, {}),
-        borderWidth: 1,
-        backgroundColor: '#4E79A7'
+        label: 'Number of Orders',
+        data: orderCounts,
+        borderColor: '#4E79A7',
+        backgroundColor: 'rgba(78, 121, 167, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#4E79A7',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 7
       }]
     }
   })
@@ -130,14 +189,14 @@ async function getCustomers(fetchBody) {
     </thead>
     <tbody>
       <tr>
-        <td>Số lượng khách hàng</td>
+        <td>Customer Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-customers">Details</a></td>
       </tr>
     </tbody>
   `
 
-  const customerDiv = document.querySelector('div.customer')
+  const customerDiv = document.querySelector('div.table.customer').querySelector('div.customer')
   const oldTable = customerDiv.querySelector("table")
 
   if (oldTable) oldTable.remove()
@@ -154,7 +213,7 @@ async function getCustomers(fetchBody) {
         },
         title: {
           display: true,
-          text: 'HẠNG THÀNH VIÊN'
+          text: 'Member Rank'
         }
       }
     },
@@ -171,29 +230,55 @@ async function getCustomers(fetchBody) {
 
   const customerCtx = document.getElementById("customer")
   Chart.getChart(customerCtx)?.destroy()
+  
+  // Prepare data for line chart
+  const customerDates = Array.from(new Set(data.map(user => formatDate(user.createdAt))))
+  const customerCounts = customerDates.map(date => 
+    data.filter(user => formatDate(user.createdAt) === date).length
+  )
+  
   new Chart(customerCtx, {
-    type: 'bar',
+    type: 'line',
     options: {
+      responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: {
           display: false
         },
         title: {
           display: true,
-          text: 'KHÁCH HÀNG THEO THỜI GIAN'
+          text: 'Customers Over Time',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
         }
       }
     },
     data: {
-      labels: Array.from(new Set(data.map(user => formatDate(user.createdAt)))),
+      labels: customerDates,
       datasets: [{
-        data: data.map(user => user.createdAt).reduce((acc, date) => {
-          const formattedDate = formatDate(date)
-          acc[formattedDate] = (acc[formattedDate] || 0) + 1
-          return acc
-        }, {}),
-        borderWidth: 1,
-        backgroundColor: '#F28E2B'
+        label: 'Number of Customers',
+        data: customerCounts,
+        borderColor: '#F28E2B',
+        backgroundColor: 'rgba(242, 142, 43, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#F28E2B',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 7
       }]
     }
   })
@@ -211,14 +296,14 @@ async function getEmployees(fetchBody) {
     </thead>
     <tbody>
       <tr>
-        <td>Số lượng nhân sự</td>
+        <td>Employee Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-employees">Details</a></td>
       </tr>
     </tbody>
   `
 
-  const employeeDiv = document.querySelector('div.employee')
+  const employeeDiv = document.querySelector('div.table.employee').querySelector('div.employee')
   const oldTable = employeeDiv.querySelector("table")
 
   if (oldTable) oldTable.remove()
@@ -235,7 +320,7 @@ async function getEmployees(fetchBody) {
         },
         title: {
           display: true,
-          text: 'VỊ TRÍ NHÂN SỰ'
+          text: 'Employees by Position'
         }
       }
     },
@@ -261,7 +346,7 @@ async function getEmployees(fetchBody) {
         },
         title: {
           display: true,
-          text: 'NHÂN SỰ THEO THỜI GIAN'
+          text: 'Employees Over Time'
         }
       }
     },
@@ -292,14 +377,14 @@ async function getProducts() {
     </thead>
     <tbody>
       <tr>
-        <td>Số lượng sản phẩm</td>
+        <td>Product Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-products/?page=&type=">Details</a></td>
       </tr>
     </tbody>
   `
 
-  const productDiv = document.querySelector('div.product')
+  const productDiv = document.querySelector('div.table.product').querySelector('div.product')
   const oldTable = productDiv.querySelector("table")
 
   if (oldTable) oldTable.remove()
@@ -316,7 +401,7 @@ async function getProducts() {
         },
         title: {
           display: true,
-          text: 'SẢN PHẨM THEO DANH MỤC'
+          text: 'Products by Categories'
         }
       }
     },
@@ -332,33 +417,120 @@ async function getProducts() {
       }]
     }
   })
+}
 
-  const productCategoryCtx = document.getElementById("product-category")
-  Chart.getChart(productCategoryCtx)?.destroy()
-  new Chart(productCategoryCtx, {
-    type: 'pie',
-    options: {
-      plugins: {
-        legend: {
-          display: false
-        },
-        title: {
-          display: true,
-          text: 'TỈ LỆ DOANH THU'
-        }
-      }
-    },
-    data: {
-      labels: ['Skincare', 'Makeup'],
-      datasets: [{
-        data: [
-          data.filter(product => product.categories === 'skincare').reduce((acc, product) => acc + product.price * product.saleNumber, 0), 
-          data.filter(product => product.categories === 'makeup').reduce((acc, product) => acc + product.price * product.saleNumber, 0)
-        ],
-        borderWidth: 1,
-      }]
+async function getProductAnalytics() {
+  try {
+    // Load summary metrics
+    const summaryRes = await fetch('/admin/analytics/summary')
+    const summaryData = await summaryRes.json()
+    if (summaryData.success) {
+      document.getElementById('home-total-views').textContent = summaryData.data.totalViews.toLocaleString('vi-VN')
+      document.getElementById('home-total-sales').textContent = summaryData.data.totalSales.toLocaleString('vi-VN')
     }
+
+    // Load top viewed
+    const viewedRes = await fetch('/admin/analytics/top-viewed?limit=5')
+    const viewedData = await viewedRes.json()
+    if (viewedData.success) {
+      renderHomeTopProducts('home-top-viewed', viewedData.data, 'viewed')
+    }
+
+    // Load top purchased
+    const purchasedRes = await fetch('/admin/analytics/top-purchased?limit=5')
+    const purchasedData = await purchasedRes.json()
+    if (purchasedData.success) {
+      renderHomeTopProducts('home-top-purchased', purchasedData.data, 'purchased')
+    }
+  } catch (error) {
+    console.error('Error loading product analytics:', error)
+  }
+}
+
+async function getOrderAnalytics() {
+  try {
+    // Payment success rate + by method
+    const paymentRes = await fetch('/admin/analytics/payment-success-rate-by-method')
+    const paymentData = await paymentRes.json()
+    if (paymentData.success && paymentData.data) {
+      const overall = paymentData.data.overallRate || 0
+      document.getElementById('home-payment-success-rate').textContent = `${Number(overall).toFixed(2)}%`
+      const methods = paymentData.data.rateByMethod || []
+      renderPaymentMethods('home-add-to-cart-by-method', methods)
+    }
+
+    // Add-to-cart overall rate (uses add-to-cart by product endpoint for overall rate)
+    const addRes = await fetch('/admin/analytics/add-to-cart-rate-by-product')
+    const addData = await addRes.json()
+    if (addData.success && addData.data) {
+      const overallAdd = addData.data.overallRate || 0
+      document.getElementById('home-add-to-cart-rate').textContent = `${Number(overallAdd).toFixed(2)}%`
+    }
+  } catch (error) {
+    console.error('Error loading order analytics:', error)
+  }
+}
+
+function renderPaymentMethods(elementId, items) {
+  const container = document.getElementById(elementId)
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p style="color: #999;">No data</p>'
+    return
+  }
+
+  let html = `
+    <table style="width:100%; border-collapse: collapse;">
+      <thead style="background: linear-gradient(90deg, #2c7a7b, #6fb3b8); color: #fff;">
+        <tr>
+          <th style="text-align:left; padding:8px;">PAYMENT METHOD</th>
+          <th style="text-align:center; padding:8px;">TOTAL ORDERS</th>
+          <th style="text-align:center; padding:8px;">SUCCESSFUL</th>
+          <th style="text-align:center; padding:8px;">SUCCESS RATE</th>
+        </tr>
+      </thead>
+      <tbody>
+  `
+
+  items.forEach(item => {
+    const method = item.paymentMethod || 'Unknown'
+    const total = item.total ?? 0
+    const successful = item.successful ?? 0
+    const rate = item.rate ?? 0
+    const color = rate >= 60 ? '#28a745' : (rate >= 30 ? '#ffc107' : '#e74c3c')
+
+    html += `
+      <tr style="border-bottom: 1px solid #f0f0f0;">
+        <td style="padding:8px">${method}</td>
+        <td style="text-align:center; padding:8px">${total}</td>
+        <td style="text-align:center; padding:8px">${successful}</td>
+        <td style="text-align:center; padding:8px; color:${color};"><strong>${Number(rate).toFixed(2)}%</strong></td>
+      </tr>
+    `
   })
+
+  html += `</tbody></table>`
+  container.innerHTML = html
+}
+
+function renderHomeTopProducts(elementId, items, type) {
+  const container = document.getElementById(elementId)
+  if (items.length === 0) {
+    container.innerHTML = '<p style="color: #999;">No data</p>'
+    return
+  }
+
+  let html = '<ul style="list-style: none; padding: 0; margin: 0;">'
+  items.forEach(item => {
+    const count = type === 'viewed' ? item.viewCount : item.purchaseCount
+    html += `
+      <li style="padding: 4px 0; border-bottom: 1px solid #f0f0f0;">
+        <small><strong>${item.name}</strong></small><br>
+        <small style="color: #666;">${count} ${type === 'viewed' ? 'views' : 'sold'}</small>
+      </li>
+    `
+  })
+  html += '</ul>'
+  container.innerHTML = html
 }
 
 async function getSuppliers() {
@@ -373,16 +545,21 @@ async function getSuppliers() {
     </thead>
     <tbody>
       <tr>
-        <td>Số lượng nhà cung cấp</td>
+        <td>Supplier Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-suppliers">Details</a></td>
       </tr>
     </tbody>
   `
 
-  document.querySelector('div.supplier').appendChild(table)
+  const supplierDiv = document.querySelector('div.table.supplier').querySelector('div.supplier')
+  const oldTable = supplierDiv.querySelector("table")
 
-  new Chart(supplier, {
+  if (oldTable) oldTable.remove()
+  supplierDiv.appendChild(table)
+  const supplierCtx = document.getElementById("product")
+  Chart.getChart(supplierCtx)?.destroy()
+  new Chart(supplierCtx, {
     type: 'bar',
     options: {
       plugins: {
@@ -391,7 +568,7 @@ async function getSuppliers() {
         },
         title: {
           display: true,
-          text: 'NHÀ CUNG CẤP THEO THỜI GIAN'
+          text: 'Supplier Over Time'
         }
       }
     },
@@ -422,7 +599,7 @@ async function getBrands() {
     </thead>
     <tbody>
       <tr>
-        <td>Number of Brands</td>
+        <td>Brand Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-brands">Details</a></td>
       </tr>
@@ -451,7 +628,7 @@ async function getPurchases(fetchBody) {
     </tbody>
   `
 
-  const purchaseDiv = document.querySelector('div.purchase')
+  const purchaseDiv = document.querySelector('div.table.purchase').querySelector('div.purchase')
   const oldTable = purchaseDiv.querySelector("table")
 
   if (oldTable) oldTable.remove()
@@ -464,7 +641,7 @@ async function getPurchases(fetchBody) {
     data: {
       labels: Array.from(new Set(data.map(purchase => formatDate(purchase.createdAt)))),
       datasets: [{
-        label: 'IMPORTS OVER TIME',
+        label: 'Import Over Time',
         data: data.map(purchase => purchase.createdAt).reduce((acc, date) => {
           const formattedDate = formatDate(date)
           acc[formattedDate] = (acc[formattedDate] || 0) + 1
@@ -485,18 +662,24 @@ async function getStores() {
   const table = document.createElement('table')
   table.innerHTML = `
     <thead>
-      <tr><td colspan="3">DISTRIBUTOR MANAGEMENT</td></tr>
+      <tr><td colspan="3">STORE MANAGEMENT</td></tr>
     </thead>
     <tbody>
       <tr>
-        <td>Số lượng đại lý</td>
+        <td>Store Quantity</td>
         <td>${data.length}</td>
         <td><a href="/admin/all-stores">Details</a></td>
       </tr>
     </tbody>
   `
 
-  document.querySelector('div.store').appendChild(table)
+  const storeDiv = document.querySelector('div.table.store').querySelector('div.store')
+  const oldTable = storeDiv.querySelector("table")
+
+  if (oldTable) oldTable.remove()
+  storeDiv.appendChild(table)
+  const storeCtx = document.getElementById("product")
+  Chart.getChart(storeCtx)?.destroy()
 }
 
 async function getAll() {
@@ -531,11 +714,13 @@ async function getAll() {
 
     await getFinance(fetchBody)
     await getOrders(fetchBody)
+    await getOrderAnalytics()
     await getCustomers(fetchBody)
     await getEmployees(fetchBody)
-    await getSuppliers()
     await getProducts()
-    await getStores()
+    await getProductAnalytics()
+    // await getStores()
+    // await getSuppliers()
     // await getPurchases(fetchBody)
     // await getBrands()
   } catch (error) {
@@ -568,6 +753,7 @@ document.querySelector('button[type="submit"]').addEventListener('click', async 
 })
 
 window.addEventListener('DOMContentLoaded', async function loadData() {
+  initDashboardNavigator()
   await getAll()
 })
 

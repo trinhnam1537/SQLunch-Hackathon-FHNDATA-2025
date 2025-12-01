@@ -1,17 +1,19 @@
 const supplier = require('../../models/supplierModel')
 const purchase = require('../../models/purchaseModel')
-const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
 const { ObjectId } = require('mongodb')
 
 class allSuppliersController {
-  // all
   async getSuppliers(req, res, next) {
     try {
       const currentPage  = req.body.page
-      const sort         = req.body.sort
-      const filter       = req.body.filter
+      let sort           = req.body.sort
+      let filter         = req.body.filter
       const itemsPerPage = req.body.itemsPerPage
       const skip         = (currentPage - 1) * itemsPerPage
+
+      if (Object.keys(sort).length === 0) {
+        sort = { updatedAt: -1 }
+      }
 
       if (filter['_id']) {
         filter['_id'] = ObjectId.createFromHexString(filter['_id'])
@@ -41,13 +43,12 @@ class allSuppliersController {
 
   async allSuppliers(req, res, next) {
     try {
-      return res.render('admin/all/supplier', { title: 'Danh sách đối tác', layout: 'admin' })
+      return res.render('admin/all/supplier', { title: 'Supplier List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
   }
 
-  // update
   async getSupplier(req, res, next) {
     try {
       const [supplierInfo, purchaseInfo] = await Promise.all([
@@ -63,16 +64,6 @@ class allSuppliersController {
     }
   }
 
-  async supplierInfo(req, res, next) {
-    try {
-      if (!checkForHexRegExp(req.params.id)) throw new Error('error')
-      if (!(await supplier.findOne({ _id: req.params.id }).lean())) throw new Error('error')
-      return res.render('admin/detail/supplier', { layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
-    }
-  }
-
   async supplierUpdate(req, res, next) {
     try {
       await supplier.updateOne({ _id: req.body.id }, {
@@ -81,19 +72,10 @@ class allSuppliersController {
         address : req.body.address ,
       })
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       console.log(error)
       return res.json({error: error.message})
-    }
-  }
-
-  // create
-  async supplierCreate(req, res, next) {
-    try {
-      return res.render('admin/create/supplier', { title: 'Thêm đối tác mới', layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
   }
 

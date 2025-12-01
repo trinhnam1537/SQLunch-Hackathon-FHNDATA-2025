@@ -37,7 +37,7 @@ async function checkUser() {
     avatarMenu.appendChild(updateProfileButton)
   
     const logOutButton = document.createElement('a')
-    logOutButton.innerText = 'Sign Out'
+    logOutButton.innerText = 'Logout'
     logOutButton.setAttribute('href', '/log-out')
     // ✅ NEW: Fire page_exit when user signs out
     logOutButton.onclick = async function(event) {
@@ -57,7 +57,7 @@ async function checkUser() {
   } 
   else {
     const logInButton = document.createElement('a')
-    logInButton.innerText = 'Sign In'
+    logInButton.innerText = 'Login'
     logInButton.setAttribute('href', '/authentication/sign-in')
     // ✅ NEW: Fire page_exit when user signs in
     logInButton.onclick = async function(event) {
@@ -89,8 +89,9 @@ function setDisplay(width, menu) {
 }
 
 searchIcon.addEventListener('click', () => {
-  searchInput.classList.toggle('open');
-  searchInput.focus();
+  searchInput.classList.toggle('open')
+  searchInput.focus()
+  searchProducts.classList.remove("open")
 });
 
 // create input element
@@ -105,14 +106,14 @@ let timer
 searchInput.oninput = async function(event) {
   searchProducts.classList.remove("open")
   searchProducts.querySelectorAll('div.product').forEach(element => element.remove())
-  if (event.target.value.trim() === '') return
-
+  
   clearTimeout(timer)
   timer = setTimeout(async function() {
+    if (event.target.value.trim() === '') return
     const response = await fetch('/data/search', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ query: event.target.value})
+      body: JSON.stringify({ searchQuery: event.target.value})
     })
     if (!response.ok) throw new Error(`Response status: ${response.status}`)
     const {data} = await response.json()

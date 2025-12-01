@@ -8,6 +8,22 @@ main {
   padding: 0 10px;
   margin-top: 10px;
 }
+p.trash {
+  font-size: 15px !important;
+  padding: 10px !important;
+  border: none;
+}
+
+p.trash a {
+  text-decoration: none;
+  color: #2B6377;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+p.trash a:hover {
+  color: #94CCDF;
+  text-decoration: underline;
+}
 
 /* all items page */
 .header {
@@ -62,18 +78,20 @@ main {
   gap: 8px;
   align-items: center;
   flex: 1; /* search expands */
+  max-width: 500px;
 }
 .search select, 
 .search input,
 .sort select,
 .filter select {
-  padding: 10px 12px;
-  border: 2px solid #CCDFE3;
+  padding: 10px 15px;
+  border: 1.5px solid #CCDFE3;
   border-radius: 8px;
   font-size: 14px;
   background: transparent;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: fit-content !important;
+  width: 100% !important;
+  min-width: 200px;
 }
 
 .search select:focus, 
@@ -102,24 +120,26 @@ main {
 }
 
 #clear-sort-filter {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #d4183d, #ff5a5a);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(212, 24, 61, 0.15);
+  padding: 0px 0px;
+    background: transparent; 
+    border: 1.5px solid #d4183d; 
+    color: #d4183d; 
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none; 
 }
 
 #clear-sort-filter:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(212, 24, 61, 0.25);
+    background-color: rgba(212, 24, 61, 0.05); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(212, 24, 61, 0.1); 
 }
 
 #clear-sort-filter:active {
-  transform: translateY(0);
+    transform: translateY(0);
+    background-color: rgba(212, 24, 61, 0.1); 
 }
 
 .create-btn {
@@ -266,6 +286,67 @@ table.all-items td.loading {
 table td {
   padding: 10px;
   font-size: 14px;
+}
+/* =========================================
+   STYLE CHUNG CHO CÁC NÚT ICON
+   ========================================= */
+.view-btn,
+.view-order-btn,
+.delete-btn,
+.update-btn,
+.restore-btn {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* MÀU CHO TỪNG NÚT */
+.view-btn,
+.view-order-btn { color: #2B6377; }
+.delete-btn { color: #dc3545; }
+.update-btn { color: #F28E2B; }
+.restore-btn { color: #28a745; }
+
+/* EFFECT KHI HOVER CHUNG */
+.view-btn:hover,
+.view-order-btn:hover,
+.delete-btn:hover,
+.update-btn:hover,
+.restore-btn:hover {
+  background: transparent !important;
+  transform: translateY(-3px);
+}
+
+/* EFFECT RIÊNG CHO TỪNG NÚT KHI HOVER */
+.view-btn:hover,
+.view-order-btn:hover {
+  color: #1a3f52;
+  filter: drop-shadow(0 5px 4px rgba(43, 99, 119, 0.35));
+}
+
+.update-btn:hover {
+  color: #d67d26;
+  filter: drop-shadow(0 5px 4px rgba(242, 142, 43, 0.35));
+}
+
+.restore-btn:hover {
+  color: #1e7e34;
+  filter: drop-shadow(0 5px 4px rgba(40, 167, 69, 0.35));
+}
+
+.delete-btn:hover {
+  color: #a71d2a;
+  filter: drop-shadow(0 5px 4px rgba(220, 53, 69, 0.35));
 }
 
 table td:first-child {
@@ -541,7 +622,6 @@ table img {
 .employee-details-container,
 .order-details-container,
 .product-details-container,
-.profile-details-container,
 .purchase-details-container,
 .store-details-container,
 .supplier-details-container,
@@ -569,7 +649,6 @@ table img {
 .employee-details-container div#form,
 .order-details-container div#form,
 .product-details-container div#form,
-.profile-details-container div#form,
 .purchase-details-container div#form,
 .store-details-container div#form,
 .supplier-details-container div#form,
@@ -585,7 +664,6 @@ table img {
 .employee-details-container div#form table,
 .order-details-container div#form table,
 .product-details-container div#form table,
-.profile-details-container div#form table,
 .purchase-details-container div#form table,
 .store-details-container div#form table,
 .supplier-details-container div#form table,
@@ -602,13 +680,12 @@ table img {
 .employee-details-container div#form table thead tr td,
 .order-details-container div#form table thead tr td,
 .product-details-container div#form table thead tr td,
-.profile-details-container div#form table thead tr td,
 .purchase-details-container div#form table thead tr td,
 .store-details-container div#form table thead tr td,
 .supplier-details-container div#form table thead tr td,
 .voucher-details-container div#form table thead tr td,
 .blog-details-container div#form table thead tr td {
-  background: linear-gradient(135deg, #2B6377, #94CCDF);
+  /* background: linear-gradient(135deg, #2B6377, #94CCDF); */
   color: white;
   font-weight: 700;
   text-align: center;
@@ -637,7 +714,7 @@ table img {
 }
 
 #table-2 thead tr td {
-  background: linear-gradient(135deg, #2B6377, #94CCDF);
+  /* background: linear-gradient(135deg, #2B6377, #94CCDF); */
   color: white;
   font-weight: 700;
 }
@@ -653,7 +730,7 @@ table img {
 #table-2 td {
   padding: 14px 10px;
   text-align: center;
-  border-bottom: 1px solid #CCDFE3;
+  /* border-bottom: 1px solid #CCDFE3; */
   color: #555;
 }
 
@@ -713,7 +790,6 @@ table img {
 .employee-details-container,
 .order-details-container,
 .product-details-container,
-.profile-details-container,
 .purchase-details-container,
 .store-details-container,
 .supplier-details-container,
@@ -749,7 +825,6 @@ table img {
 .employee-details-container.show,
 .order-details-container.show,
 .product-details-container.show,
-.profile-details-container.show,
 .purchase-details-container.show,
 .store-details-container.show,
 .supplier-details-container.show,
@@ -773,7 +848,6 @@ table img {
 .employee-details-container #form,
 .order-details-container #form,
 .product-details-container #form,
-.profile-details-container #form,
 .purchase-details-container #form,
 .store-details-container #form,
 .supplier-details-container #form,
@@ -841,7 +915,6 @@ table img {
 .employee-details-container .close-modal-btn,
 .order-details-container .close-modal-btn,
 .product-details-container .close-modal-btn,
-.profile-details-container .close-modal-btn,
 .purchase-details-container .close-modal-btn,
 .store-details-container .close-modal-btn,
 .supplier-details-container .close-modal-btn,
@@ -880,7 +953,6 @@ table img {
 .employee-details-container .close-modal-btn:hover,
 .order-details-container .close-modal-btn:hover,
 .product-details-container .close-modal-btn:hover,
-.profile-details-container .close-modal-btn:hover,
 .purchase-details-container .close-modal-btn:hover,
 .store-details-container .close-modal-btn:hover,
 .supplier-details-container .close-modal-btn:hover,
@@ -907,7 +979,6 @@ table img {
 .employee-details-container input:disabled,
 .order-details-container input:disabled,
 .product-details-container input:disabled,
-.profile-details-container input:disabled,
 .purchase-details-container input:disabled,
 .store-details-container input:disabled,
 .supplier-details-container input:disabled,
@@ -934,7 +1005,6 @@ table img {
 .employee-details-container .submit-button,
 .order-details-container .submit-button,
 .product-details-container .submit-button,
-.profile-details-container .submit-button,
 .purchase-details-container .submit-button,
 .store-details-container .submit-button,
 .supplier-details-container .submit-button,
@@ -942,6 +1012,7 @@ table img {
 .blog-details-container .submit-button {
   margin-top: 24px;
   padding-top: 24px;
+  padding-bottom: 24px;
   border-top: 1px solid #CCDFE3;
   text-align: right;
 }
@@ -961,7 +1032,6 @@ table img {
 .employee-details-container .submit-button button,
 .order-details-container .submit-button button,
 .product-details-container .submit-button button,
-.profile-details-container .submit-button button,
 .purchase-details-container .submit-button button,
 .store-details-container .submit-button button,
 .supplier-details-container .submit-button button,
@@ -995,7 +1065,6 @@ table img {
 .employee-details-container .submit-button button[type="submit"],
 .order-details-container .submit-button button[type="submit"],
 .product-details-container .submit-button button[type="submit"],
-.profile-details-container .submit-button button[type="submit"],
 .purchase-details-container .submit-button button[type="submit"],
 .store-details-container .submit-button button[type="submit"],
 .supplier-details-container .submit-button button[type="submit"],
@@ -1020,7 +1089,6 @@ table img {
 .employee-details-container .submit-button button[type="submit"]:hover,
 .order-details-container .submit-button button[type="submit"]:hover,
 .product-details-container .submit-button button[type="submit"]:hover,
-.profile-details-container .submit-button button[type="submit"]:hover,
 .purchase-details-container .submit-button button[type="submit"]:hover,
 .store-details-container .submit-button button[type="submit"]:hover,
 .supplier-details-container .submit-button button[type="submit"]:hover,
@@ -1047,7 +1115,6 @@ table img {
   .employee-details-container #form,
   .order-details-container #form,
   .product-details-container #form,
-  .profile-details-container #form,
   .purchase-details-container #form,
   .store-details-container #form,
   .supplier-details-container #form,
@@ -1072,7 +1139,6 @@ table img {
   .employee-details-container .close-modal-btn,
   .order-details-container .close-modal-btn,
   .product-details-container .close-modal-btn,
-  .profile-details-container .close-modal-btn,
   .purchase-details-container .close-modal-btn,
   .store-details-container .close-modal-btn,
   .supplier-details-container .close-modal-btn,

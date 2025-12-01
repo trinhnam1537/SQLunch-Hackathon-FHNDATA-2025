@@ -2,6 +2,12 @@ require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
+
+/*add more for caching */
+const oneYearInSeconds = 31536000;
+const oneYearInMilliseconds = oneYearInSeconds * 1000;
+/* done adding*/ 
+
 const handlebars = require('express-handlebars')
 const path = require('path')
 const methodOverride = require('method-override')
@@ -14,6 +20,9 @@ const port = process.env.PORT
 const cron = require('node-cron')
 const { getUsersWithBirthdayThisMonth } = require('./app/controllers/cron/createBirthdayVoucher') 
 const { setVoucherExpired } = require('./app/controllers/cron/setVoucherExpired') 
+const { setFlashDealProducts } = require('./app/controllers/cron/setFlashDealProducts')
+const { setTopSellingProducts } = require('./app/controllers/cron/setTopSellingProducts')
+const { setNewArrivalProducts } = require('./app/controllers/cron/setNewArrivalProducts')
 
 // ⭐ ADD THIS
 const { initProducer } = require('./app/kafka/producer.js');
@@ -35,8 +44,16 @@ setTimeout(() => {
 // startAllConsumers();
 
 
+db.connect()
+db.startWatch()
 app.use(express.json({ limit: '50mb' }))
-app.use(express.static(path.join(__dirname, 'public')))
+/* app.use(express.static(path.join(__dirname, 'public'))) */
+// Change to
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: oneYearInMilliseconds, // Thiết lập Cache-Control Header TTL (1 năm)
+    immutable: true // Tùy chọn: khuyến nghị dùng nếu tên file tĩnh của bạn có hash
+}));
+
 app.use(express.urlencoded({extended: true}))
 app.use(express.json())
 app.use(morgan('combined'))
@@ -67,10 +84,13 @@ app.set('view options', { layout: 'other' })
 
 async function main() {
   // await getUsersWithBirthdayThisMonth()
-  await setVoucherExpired()
+  // await setVoucherExpired()
+  // await setFlashDealProducts()
+  // await setTopSellingProducts()
+  // await setNewArrivalProducts()
 }
 
-// main()
+main()
 
 route(app)
 server.listen(port, () => {

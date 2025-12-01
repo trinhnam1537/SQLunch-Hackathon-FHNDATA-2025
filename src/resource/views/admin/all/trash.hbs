@@ -30,33 +30,45 @@
         {{/each}}
       </tbody>
     </table>
-
-    <div id="id00" class="modal">
-      <form class="modal-content">
-        <div class="container">
-          <p>Do you want to restore product {{this.name}}</p>
-          <div class="clearfix">
-            <button type="button" onclick="document.getElementById('id00').style.display='none'" class="cancelbtn">Cancel</button>
-            <button id="restore-button" type="button" class="deletebtn">Restore</button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <div id="id01" class="modal">
-      <form class="modal-content">
-        <div class="container">
-          <p>Do you want to permanently delete product {{this.name}}</p>
-          <div class="clearfix">
-            <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
-            <button id="delete-button" type="button" class="deletebtn">Delete Permanently</button>
-          </div>
-        </div>
-      </form>
-    </div>
   </div>
 
   <span class="pagination"></span>
+</div>
+
+<div id="restore-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header success">
+      <i class="fi fi-rr-refresh"></i>
+      <h3>Restore Product</h3>
+    </div>
+    <div class="modal-body">
+      <p>Do you want to <strong>restore</strong> this product?</p>
+      <p class="product-name">{{this.name}}</p>
+      <p class="note">It will appear again in your store.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="cancelbtn" onclick="closeModal('restore-modal')">Cancel</button>
+      <button type="button" class="restorebtn" id="restore-button">Restore Product</button>
+    </div>
+  </div>
+</div>
+
+<div id="delete-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header danger">
+      <i class="fi fi-rr-trash"></i>
+      <h3>Permanent Delete</h3>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to <strong>permanently delete</strong> this product?</p>
+      <p class="product-name">{{this.name}}</p>
+      <p class="note warning">This action <strong>cannot be undone</strong>. All data will be lost forever.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="cancelbtn" onclick="closeModal('delete-modal')">Cancel</button>
+      <button type="button" class="deletebtn" id="delete-button">Delete Forever</button>
+    </div>
+  </div>
 </div>
 
 <form style="display: none" name="delete-form" method="post"></form>

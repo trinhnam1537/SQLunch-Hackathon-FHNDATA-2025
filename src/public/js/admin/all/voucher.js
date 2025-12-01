@@ -8,6 +8,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -53,15 +54,19 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
     tr.querySelector('td:nth-child(1)').classList.add('loading')
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-vouchers/data/vouchers', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      sort  : sortOptions, 
-      filter: filterOptions, 
-      page  : currentPage,
-      itemsPerPage: itemsPerPage
-    })
+    body: JSON.stringify(payload)
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
   const {data, data_size, error} = await response.json()
@@ -95,7 +100,7 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
   })
 
   const headLink = document.createElement('td')
-  headLink.textContent = 'Chi tiết'
+  headLink.textContent = 'Actions'
   trHead.appendChild(headLink)
 
   thead.appendChild(trHead)
@@ -126,7 +131,7 @@ async function getVouchers(sortOptions, filterOptions, currentPage, itemsPerPage
 
     const openButton = document.createElement('td')
     openButton.style.textAlign = 'center'
-    openButton.innerHTML = `<button id="${item._id}">View</button>`
+    openButton.innerHTML = `<button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>`
     openButton.onclick = async function() {
       await openVoucherDetail(item._id)
     }
@@ -181,8 +186,8 @@ async function openVoucherDetail(voucherId) {
     detailModal.querySelector('input[name="minOrder"]').value     = formatNumber(voucherInfo.minOrder) || ''
     detailModal.querySelector('input[name="status"]').value       = voucherInfo.status || ''
     detailModal.querySelector('input[name="memberCode"]').value   = voucherInfo.memberCode || ''
-    detailModal.querySelector('input[name="startDate"]').value    = voucherInfo.startDate ? formatDate(voucherInfo.startDate) : ''
-    detailModal.querySelector('input[name="endDate"]').value      = voucherInfo.endDate ? formatDate(voucherInfo.endDate) : ''
+    detailModal.querySelector('input[name="startDate"]').value    = voucherInfo.startDate === null ? null : voucherInfo.startDate.split('T')[0] || ''
+    detailModal.querySelector('input[name="endDate"]').value      = voucherInfo.endDate === null ? null : voucherInfo.endDate.split('T')[0] || ''
 
     // Store voucher info for update comparison
     currentVoucherInfo = {
@@ -193,6 +198,9 @@ async function openVoucherDetail(voucherId) {
       maxDiscount: voucherInfo.maxDiscount,
       minOrder: voucherInfo.minOrder
     }
+
+    formatInputNumber(detailModal.querySelector('input[name="maxDiscount"]'))
+    formatInputNumber(detailModal.querySelector('input[name="minOrder"]'))
 
     return voucherInfo
 
@@ -210,13 +218,20 @@ async function updateVoucher() {
   const discount    = deFormatNumber(detailModal.querySelector('input[name="discount"]').value)
   const maxDiscount = deFormatNumber(detailModal.querySelector('input[name="maxDiscount"]').value)
   const minOrder    = deFormatNumber(detailModal.querySelector('input[name="minOrder"]').value)
+  const status      = detailModal.querySelector('input[name="status"]').value
+  const startDate   = detailModal.querySelector('input[name="startDate"]').value
+  const endDate     = detailModal.querySelector('input[name="endDate"]').value
 
   // Check if any field has changed
   if (name        === currentVoucherInfo.name         && 
       description === currentVoucherInfo.description  && 
       discount    === currentVoucherInfo.discount     &&
       maxDiscount === currentVoucherInfo.maxDiscount  &&
-      minOrder    === currentVoucherInfo.minOrder) {
+      minOrder    === currentVoucherInfo.minOrder     &&
+      status      === currentVoucherInfo.status       &&
+      startDate   === currentVoucherInfo.startDate    &&
+      endDate     === currentVoucherInfo.endDate
+    ) {
     return pushNotification('Please update the information')
   }
 
@@ -230,7 +245,10 @@ async function updateVoucher() {
       description: description,
       discount: discount,
       maxDiscount: maxDiscount,
-      minOrder: minOrder
+      minOrder: minOrder,
+      status: status,
+      startDate: startDate,
+      endDate: endDate
     })
   })
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -268,9 +286,9 @@ async function createVoucher() {
     const code = createModal.querySelector('input#code').value
     const name = createModal.querySelector('input#name').value
     const description = createModal.querySelector('input#description').value
-    const discount = createModal.querySelector('input#discount').value
-    const maxDiscount = createModal.querySelector('input#maxDiscount').value
-    const minOrder = createModal.querySelector('input#minOrder').value
+    const discount = deFormatNumber(createModal.querySelector('input#discount').value)
+    const maxDiscount = deFormatNumber(createModal.querySelector('input#maxDiscount').value)
+    const minOrder = deFormatNumber(createModal.querySelector('input#minOrder').value)
     const status = createModal.querySelector('select#status').value
     const memberCode = createModal.querySelector('select#memberCode').value
     const startDate = createModal.querySelector('input#startDate').value
@@ -308,6 +326,9 @@ async function createVoucher() {
     pushNotification("An error occurred.")
   }
 }
+
+formatInputNumber(createModal.querySelector('input#maxDiscount'))
+formatInputNumber(createModal.querySelector('input#minOrder'))
 
 createSubmitBtn.onclick = async function() {
   await createVoucher()

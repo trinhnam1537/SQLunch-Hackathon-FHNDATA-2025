@@ -3,19 +3,20 @@ const purchase = require('../../models/purchaseModel')
 const supplier = require('../../models/supplierModel')
 const store = require('../../models/storeModel')
 const employee = require('../../models/employeeModel')
-const material = require('../../models/materialModel')
-const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
 const { ObjectId } = require('mongodb')
 
 class adminController {
-  // all
   async getPurchases(req, res, next) {
     try {
       const currentPage  = req.body.page
-      const sort         = req.body.sort
-      const filter       = req.body.filter
+      let sort           = req.body.sort
+      let filter         = req.body.filter
       const itemsPerPage = req.body.itemsPerPage
       const skip         = (currentPage - 1) * itemsPerPage
+
+      if (Object.keys(sort).length === 0) {
+        sort = { updatedAt: -1 }
+      }
 
       if (filter['_id']) {
         filter['_id'] = ObjectId.createFromHexString(filter['_id'])
@@ -52,13 +53,12 @@ class adminController {
 
   async allPurchases(req, res, next) {
     try {
-      return res.render('admin/all/purchase', { title: 'Danh sách phiếu nhập', layout: 'admin' })
+      return res.render('admin/all/purchase', { title: 'Purchase List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
   }
 
-  // update
   async getPurchase(req, res, next) {
     try {
       const purchaseInfo = await purchase.findOne({ _id: req.body.id }).lean()
@@ -74,22 +74,10 @@ class adminController {
     }
   }
 
-  async purchaseInfo(req, res, next) {
-    try {
-      if (!checkForHexRegExp(req.params.id)) throw new Error('error')
-      if (!(await purchase.findOne({ _id: req.params.id }).lean())) throw new Error('error')
-
-      return res.render('admin/detail/purchase', { layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
-    }
-  }
-
   async purchaseUpdate(req, res, next) {
 
   }
 
-  // create
   async getSuppliers(req, res, next) {
     try {
       const suppliers = await supplier.find().lean()
@@ -98,25 +86,18 @@ class adminController {
       return res.json({error: error.message})
     }
   }
-  
-  async getMaterials(req, res, next) {
+
+  async getProducts(req, res, next) {
     try {
       const query = req.body.query
-      const materials = await material.find({
+      const products = await product.find({
+        deletedAt: null,
         name: { $regex: query, $options: 'i'}
       }).lean()
-      return res.json({data: materials})
+      return res.json({data: products})
     } catch (error) {
       console.log(error)
       return res.json({error: error.message})
-    }
-  }
-  
-  async purchaseCreate(req, res, next) {
-    try {
-      return res.render('admin/create/purchase', { title: 'Thêm đơn nhập mới', layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
   }
 
@@ -128,6 +109,7 @@ class adminController {
         note,
         productId, 
         productName,
+        productImg,
         productPrice,
         productQuantity,
         totalPurchasePrice
@@ -137,14 +119,16 @@ class adminController {
       if(!Array.isArray(productId)) {
         productId       = [productId]
         productName     = [productName]
+        productImg      = [productImg]
         productPrice    = [productPrice]
         productQuantity = [productQuantity]
       }
   
       const newPurchase = new purchase({
-        materials: productId.map((product, index) => ({
+        products: productId.map((product, index) => ({
           id        : productId[index],
           name      : productName[index],
+          image     : productImg[index],
           price     : productPrice[index],
           quantity  : productQuantity[index], 
           totalPrice: productPrice[index] * productQuantity[index]
@@ -156,10 +140,10 @@ class adminController {
         totalPurchasePrice: totalPurchasePrice
       });
       await newPurchase.save()
-
-      const materialUpdates = []
+  
+      const productUpdates = []
       productId.forEach((id, index) => {
-        materialUpdates.push({ materialId: id, quantity: productQuantity[index] })
+        productUpdates.push({ productId: id, quantity: productQuantity[index] })
       })
       
       await supplier.updateOne({ _id: supplierId }, {
@@ -168,17 +152,17 @@ class adminController {
           quantity: 1
          }
       })
-
-      const bulkOps = materialUpdates.map(({ materialId, quantity }) => ({
+  
+      const bulkOps = productUpdates.map(({ productId, quantity }) => ({
         updateOne: {
-          filter: { _id: materialId },
+          filter: { _id: productId },
           update: { $inc: { quantity: quantity } }, 
           upsert: true,
         },
       }))
-      await material.bulkWrite(bulkOps)
+      await product.bulkWrite(bulkOps)
 
-      return res.json({message: 'Tạo đơn nhập mới thành công'})
+      return res.json({message: 'Created successfully'})
     } catch (error) {
       console.log(error)
       return res.json({error: error.message})

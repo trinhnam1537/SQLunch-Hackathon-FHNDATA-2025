@@ -3,10 +3,6 @@ const product = require('../../models/productModel')
 const brand = require('../../models/brandModel')
 const productStatus = require('../../models/productStatusModel')
 const cloudinary = require('cloudinary').v2
-const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
-const kafka = require("kafkajs").Kafka
-const kafkaClient = new kafka({ brokers: ["localhost:9092"] })
-const producer = kafkaClient.producer()
 const { ObjectId } = require('mongodb')
 
 cloudinary.config({
@@ -16,31 +12,66 @@ cloudinary.config({
 })
 
 class allProductsController {
-  // all
   async getProducts(req, res, next) {
     try {
-      const currentPage  = req.body.page
-      const sort         = req.body.sort
-      const filter       = req.body.filter
-      const itemsPerPage = req.body.itemsPerPage
+      const currentPage  = Number(req.body.page) || 1
+      const itemsPerPage = Number(req.body.itemsPerPage) || 10
       const skip         = (currentPage - 1) * itemsPerPage
+      let sort           = req.body.sort || {}
+      let filter         = req.body.filter || {}
 
-      if (filter['_id']) {
-        filter['_id'] = ObjectId.createFromHexString(filter['_id'])
+      const searchQuery  = req.body.searchQuery?.trim()
+      const isSearchMode = !!searchQuery
+
+      let data = []
+      let dataSize = 0
+
+      if (isSearchMode) {
+        const pipeline = [
+          {
+            $search: {
+              index: 'product_index',                   
+              text: {
+                query: searchQuery,
+                path: [
+                  'name',    
+                ],
+                fuzzy: {
+                  maxEdits: 2,           // allow up to 2 typos (e.g. "jhon" → "john")
+                  prefixLength: 1        // first letter must be correct
+                }
+              }
+            }
+          },
+          { $skip: skip },
+          // { $limit: itemsPerPage },
+        ]
+
+        const result = await product.aggregate(pipeline)
+
+        data = result
+        dataSize = result.length
+
+      } else {
+        // NORMAL MODE
+        if (Object.keys(sort).length === 0) sort = { updatedAt: -1 }
+
+        if (filter._id?.$regex) {
+          try {
+            filter._id = mongoose.Types.ObjectId.createFromHexString(filter._id.$regex)
+          } catch (e) { delete filter._id }
+        }
+
+        const [result, total] = await Promise.all([
+          product.find(filter).sort(sort).skip(skip).limit(itemsPerPage).lean(),
+          product.countDocuments(filter)
+        ])
+
+        data = result
+        dataSize = total
       }
-  
-      const [data, dataSize] = await Promise.all([
-        product
-          .find(filter)
-          .sort(sort)
-          .skip(skip)
-          .limit(itemsPerPage)
-          .lean(),
-        product.find(filter).countDocuments(),
-      ]) 
-      if (!data) throw new Error('Data not found')
-      
-      return res.json({data: data, data_size: dataSize})
+
+      return res.json({ data: data, data_size: dataSize })
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -79,7 +110,7 @@ class allProductsController {
 
   async allProducts(req, res, next) {
     try {
-      return res.render('admin/all/product', { title: 'Danh sách sản phẩm', layout: 'admin' })
+      return res.render('admin/all/product', { title: 'Product List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
@@ -87,13 +118,12 @@ class allProductsController {
 
   async trash(req, res, next) {
     try {
-      return res.render('admin/all/trash', { title: 'Kho', layout: 'admin' })
+      return res.render('admin/all/trash', { title: 'Products Deleted', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
   }
 
-  // update
   async getProduct(req, res, next) {
     try {
       const [productInfo, brands, productStatuses] = await Promise.all([
@@ -109,32 +139,18 @@ class allProductsController {
     }
   }
 
-  async productInfo(req, res, next) {
-    try {
-      if (!checkForHexRegExp(req.params.id)) throw new Error('error')
-      if (!(await product.findOne({ _id: req.params.id }).lean())) throw new Error('error')
-
-      return res.render('admin/detail/product', { layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
-    }
-  }
-
   async productUpdated(req, res, next) {  
     try {
       function deFormatNumber(number) {
         return parseInt(number.toString().replace(/\./g, ''))
       }
-
-      console.log(req.body.purchasePrice, req.body.oldPrice, req.body.price);
   
       const updatedProduct = await product.findOneAndUpdate(
         { _id: req.body.id },
         {
           $set: {
             categories    : req.body.categories,
-            skincare      : req.body.skincare,
-            makeup        : req.body.makeup,
+            subcategories : req.body.subcategories,
             brand         : req.body.brand,
             name          : req.body.name,
             purchasePrice : deFormatNumber(req.body.purchasePrice),
@@ -145,26 +161,14 @@ class allProductsController {
             guide         : req.body.guide,
             quantity      : req.body.quantity,
             status        : req.body.status,
+            isFlashDeal   : req.body.isFlashDeal,
+            isNewArrival  : req.body.isNewArrival,
           }
         },
         { new: true }
       )
-
-      // try {
-      //   await producer.connect()
-      //   await producer.send({
-      //     topic: 'update',
-      //     messages: [{ value: JSON.stringify({
-      //       topic_type: 'product',
-      //       emp_id: req.cookies.uid,
-      //       body: updatedProduct
-      //     })}],
-      //   })
-      // } catch (error) {
-      //   console.log(error)
-      // }
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }  
@@ -173,7 +177,7 @@ class allProductsController {
   async softDelete(req, res, next) {
     try {
       await product.updateOne({ _id: req.body.id}, { deletedAt: Date.now() })
-      return res.json({isValid: true, message: 'Xoá sản phẩm thành công'})
+      return res.json({isValid: true, message: 'Deleted successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -187,7 +191,7 @@ class allProductsController {
       await cloudinary.uploader.destroy(deleteImg)
       await product.deleteOne({ _id: req.body.id })
   
-      return res.json({isValid: true, message: 'Xoá sản phẩm thành công'})
+      return res.json({isValid: true, message: 'Move product to trash successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -196,19 +200,9 @@ class allProductsController {
   async restore(req, res, next) {
     try {
       await product.updateOne({ _id: req.body.id}, { deletedAt: null })
-      return res.json({message: 'Khôi phục sản phẩm thành công'})
+      return res.json({message: 'Restore product successfully'})
     } catch (error) {
       return res.json({error: error.message})
-    }
-  }
-
-  // create
-  async createProduct(req, res, next) {
-    try {
-      const brands = await brand.find().lean()
-      return res.render('admin/create/product', { title: 'Thêm sản phẩm mới', layout: 'admin', brands })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
   }
 
@@ -220,23 +214,23 @@ class allProductsController {
       })
   
       const newProduct = new product({
-        categories  : req.body.categories,
-        skincare    : req.body.skincare,
-        makeup      : req.body.makeup,
-        brand       : req.body.brand,
-        name        : req.body.name,
-        oldPrice    : req.body.oldPrice,
-        price       : req.body.price,
-        description : req.body.description,
-        details     : req.body.details,
-        guide       : req.body.guide,
-        status      : req.body.status,
-        'img.path'  : result.secure_url,
+        categories    : req.body.categories,
+        subcategories : req.body.subcategories,
+        brand         : req.body.brand,
+        name          : req.body.name,
+        oldPrice      : req.body.oldPrice,
+        purchasePrice : req.body.purchasePrice,
+        price         : req.body.price,
+        description   : req.body.description,
+        details       : req.body.details,
+        guide         : req.body.guide,
+        quantity      : req.body.quantity,
+        'img.path'    : result.secure_url,
         'img.filename' : result.public_id
       })
       const savedProduct = await newProduct.save()
 
-      return res.json({isValid: true, message: 'Tạo sản phẩn mới thành công'})
+      return res.json({isValid: true, message: 'Created successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }

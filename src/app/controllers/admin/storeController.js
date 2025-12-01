@@ -1,17 +1,19 @@
 const store = require('../../models/storeModel')
 const employee = require('../../models/employeeModel')
-const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
 const { ObjectId } = require('mongodb')
 
 class allStoresController {
-  // all
   async getStores(req, res, next) {
     try {
       const currentPage  = req.body.page
-      const sort         = req.body.sort
-      const filter       = req.body.filter
+      let sort           = req.body.sort
+      let filter         = req.body.filter
       const itemsPerPage = req.body.itemsPerPage
       const skip         = (currentPage - 1) * itemsPerPage
+
+      if (Object.keys(sort).length === 0) {
+        sort = { updatedAt: -1 }
+      }
 
       if (filter['_id']) {
         filter['_id'] = ObjectId.createFromHexString(filter['_id'])
@@ -44,13 +46,12 @@ class allStoresController {
 
   async allStores(req, res, next) {
     try {
-      return res.render('admin/all/store', { title: 'Danh sách đại lý', layout: 'admin' })
+      return res.render('admin/all/store', { title: 'Store List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
   }
 
-  // update
   async getStore(req, res, next) {
     try {
       const storeInfo = await store.findOne({ _id: req.body.id }).lean()
@@ -62,16 +63,6 @@ class allStoresController {
     }
   }
 
-  async storeInfo(req, res, next) {
-    try {
-      if (!checkForHexRegExp(req.params.id)) throw new Error('error')
-      if (!(await store.findOne({ _id: req.params.id }).lean())) throw new Error('error')
-      return res.render('admin/detail/store', { layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
-    }
-  }
-
   async storeUpdate(req, res, next) {
     try {
       await store.updateOne({ _id: req.body.id }, {
@@ -80,18 +71,9 @@ class allStoresController {
         details: req.body.details
       })
   
-      return res.json({message: 'Cập nhật thông tin thành công'})
+      return res.json({message: 'Updated successfully'})
     } catch (error) {
       return res.json({error: error.message})
-    }
-  }
-
-  // create
-  async storeCreate(req, res, next) {
-    try {
-      return res.render('admin/create/store', { title: 'Thêm đại lý mới', layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
     }
   }
 
@@ -100,7 +82,7 @@ class allStoresController {
       const newStore = new store(req.body)
       await newStore.save()
 
-      return res.json({message: 'Tạo đại lý thành công'})
+      return res.json({message: 'Created successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }

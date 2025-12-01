@@ -8,6 +8,7 @@ const sortOptions   = {}
 const filterOptions = {}
 const currentPage   = { page: 1 }
 const dataSize      = { size: 0 }
+const searchInput   = document.querySelector('input#search-input')
 
 function generateColumns() {
   const columnsGroup = document.querySelector('div.checkbox-group')
@@ -30,10 +31,19 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
     }
   })
 
+  const payload = {
+    page: currentPage,
+    itemsPerPage: itemsPerPage,
+    sort: sortOptions,
+    filter: filterOptions
+  }
+
+  if (searchInput.value.trim()) payload.searchQuery = searchInput.value.trim()
+
   const response = await fetch('/admin/all-stores/data/stores', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sort: sortOptions, filter: filterOptions, page: currentPage, itemsPerPage })
+    body: JSON.stringify(payload)
   })
 
   if (!response.ok) throw new Error(`Response status: ${response.status}`)
@@ -58,7 +68,7 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
     trHead.appendChild(th)
   })
   const thAction = document.createElement('td')
-  thAction.textContent = 'Details'
+  thAction.textContent = 'Actions'
   trHead.appendChild(thAction)
   thead.appendChild(trHead)
 
@@ -66,7 +76,7 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
   tbody.querySelectorAll('tr').forEach(tr => tr.remove())
 
   data.forEach((item, index) => {
-    const rowIndex = index + (currentPage.page - 1) * itemsPerPage + 1
+    const rowIndex = index + (currentPage - 1) * itemsPerPage + 1
     const tr = document.createElement('tr')
 
     const tdNo = document.createElement('td')
@@ -89,7 +99,7 @@ async function getStores(sortOptions, filterOptions, currentPage, itemsPerPage) 
 
     const tdAction = document.createElement('td')
     tdAction.style.textAlign = 'center'
-    tdAction.innerHTML = `<button id="${item._id}">View</button>`
+    tdAction.innerHTML = `<button class="view-btn" id="${item._id}"><i class="fi fi-rr-eye"></i></button>`
     tdAction.onclick = () => openStoreDetail(item._id)
     tr.appendChild(tdAction)
 

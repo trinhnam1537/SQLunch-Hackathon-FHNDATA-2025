@@ -1,30 +1,30 @@
 require('dotenv').config()
-const employee = require('../../models/employeeModel')
 const user = require('../../models/userModel')
+const employee = require('../../models/employeeModel')
 const chat = require('../../models/chatModel')
 const order = require('../../models/orderModel')
 const member = require('../../models/memberModel')
 const bcrypt = require('bcryptjs')
-const checkForHexRegExp = require('../../middleware/checkForHexRegExp')
-const kafka = require("kafkajs").Kafka
-const kafkaClient = new kafka({ brokers: ["localhost:9092"] })
-const producer = kafkaClient.producer()
-const { ObjectId } = require('mongodb')
 
 class allCustomersController {
-  // all
   async getCustomers(req, res, next) {
     try {
       const currentPage  = req.body.page
-      const sort         = req.body.sort
-      const filter       = req.body.filter
+      let sort           = req.body.sort
+      let filter         = req.body.filter
       const itemsPerPage = req.body.itemsPerPage
       const skip         = (currentPage - 1) * itemsPerPage
+      const userInfo     = await employee.findOne({ _id: req.cookies.uid }).lean()
+      if (!userInfo) throw new Error('User not found')
+
+      if (Object.keys(sort).length === 0) {
+        sort = { updatedAt: -1 }
+      }
 
       if (filter['_id']) {
-        filter['_id'] = ObjectId.createFromHexString(filter['_id'].$regex)
+        filter['_id'] = ObjectId.createFromHexString(filter['_id'])
       }
-  
+
       const [data, dataSize] = await Promise.all([
         user
           .find(filter)
@@ -32,14 +32,14 @@ class allCustomersController {
           .skip(skip)
           .limit(itemsPerPage)
           .lean(),
-          user.find(filter).countDocuments(),
+        user.find(filter).countDocuments(),
       ]) 
       if (!data) throw new Error('Data not found')
       
       return res.json({data: data, data_size: dataSize})
     } catch (error) {
-      console.log(error)
-      return res.json({error: error.message})
+      console.error('getCustomers error:', error)
+      return res.status(500).json({ error: error.message })
     }
   }
 
@@ -56,13 +56,12 @@ class allCustomersController {
 
   async allCustomers(req, res, next) {
     try {
-      return res.render('admin/all/customer', { title: 'All Customers', layout: 'admin' })
+      return res.render('admin/all/customer', { title: 'Customer List', layout: 'admin' })
     } catch (error) {
       return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
   }
 
-  // update
   async getCustomer(req, res, next) {
     try {
       const customerInfo = await user.findOne({ _id: req.body.id }).lean()
@@ -105,17 +104,6 @@ class allCustomersController {
     }
   }
 
-  async customerInfo(req, res, next) {
-    try {
-      if (!checkForHexRegExp(req.params.id)) throw new Error('error')
-      if (!(await user.findOne({ _id: req.params.id }).lean())) throw new Error('error')
-
-      return res.render('admin/detail/customer', { layout: 'admin' })
-    } catch (error) {
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' }) 
-    }
-  }
-
   async customerUpdate(req, res, next) {
     try {
       const updatedUser = await user.findOneAndUpdate(
@@ -149,16 +137,6 @@ class allCustomersController {
       return res.json({message: 'Update successfully'})
     } catch (error) {
       return res.json({error: error.message})
-    }
-  }
-
-  // create
-  async createCustomer(req, res, next) {
-    try {
-      return res.render('admin/create/customer', { title: 'Add new customer', layout: 'admin' })
-    } catch (error) {
-      console.log(error)
-      return res.status(403).render('partials/denyUserAccess', { title: 'Not found', layout: 'empty' })
     }
   }
 
