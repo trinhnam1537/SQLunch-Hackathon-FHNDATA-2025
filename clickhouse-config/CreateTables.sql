@@ -105,9 +105,45 @@ FROM kafka.events;
 
 
 
+CREATE TABLE analytics.fraud_sessions (
+    sessionId String,
+    userId String,
+    fraud_score UInt8,
+    fraud_level String,
+    rulesHit Array(String),
+    startTime DateTime,
+    endTime DateTime
+) 
+ENGINE = ReplacingMergeTree()
+ORDER BY (sessionId, endTime);
 
 
+CREATE TABLE analytics.fraud_users (
+    userId String,
+    last_detected DateTime,
+    total_fraud UInt32,
+    last_rules Array(String),
+    risk_level String
+)
+ENGINE = ReplacingMergeTree()
+ORDER BY userId;
 
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_fraud_users
+TO analytics.fraud_users
+AS
+SELECT
+  userId,
+  max(endTime) as last_detected,
+  count() as total_fraud,
+  arrayConcat(groupArray(rulesHit)) as last_rules,
+  CASE 
+    WHEN count() >= 5 THEN 'high'
+    WHEN count() >= 3 THEN 'medium'
+    ELSE 'low'
+  END as risk_level
+FROM analytics.fraud_sessions
+GROUP BY userId;
 
 
 

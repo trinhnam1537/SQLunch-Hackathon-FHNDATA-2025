@@ -83,6 +83,18 @@
   <div class="table customer">
     <div class="customer"></div>
     
+    <!-- Session KPIs -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+      <div style="padding: 16px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+        <h6 style="color: #4caf50; margin: 0 0 6px 0;">Sessions > 5s</h6>
+        <h3 id="home-long-sessions-ratio" style="margin: 0;">-</h3>
+      </div>
+      <div style="padding: 16px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 4px;">
+        <h6 style="color: #ff9800; margin: 0 0 6px 0;">User Comeback Rate</h6>
+        <h3 id="home-comeback-rate" style="margin: 0;">-</h3>
+      </div>
+    </div>
+    
     <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
       <div style="width: 30%;"><canvas id="customer-membership"></canvas></div>
       <div style="width: 40%;"><canvas id="customer"></canvas></div>
@@ -153,5 +165,9 @@
   </div>
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="/js/admin/home.js"></script>

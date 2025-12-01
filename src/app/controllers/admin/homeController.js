@@ -359,11 +359,89 @@ async getActiveUsersRealtime(req, res) {
 
     } while (cursor !== "0");
 
-    return res.json({ current: total });
+    return res.json({ 
+      current: total,
+      timestamp: Date.now()  // ✅ Add timestamp
+    });
 
   } catch (error) {
     console.error("Redis realtime error:", error);
-    return res.json({ current: 0 });
+    return res.json({ 
+      current: 0,
+      timestamp: Date.now()  // ✅ Even on error, include timestamp
+    });
+  }
+}
+
+async getSessionKPIs(req, res, next) {
+  try {
+    console.log("🔍 getSessionKPIs called");
+    const { startDate, endDate } = req.body
+    console.log("📅 Dates received:", { startDate, endDate });
+
+    if (!startDate || !endDate) {
+      console.log("❌ Missing dates");
+      return res.json({
+        error: 'startDate and endDate required'
+      })
+    }
+
+    // Query 1: Sessions > 5 seconds ratio
+    console.log("📊 Executing Query 1: Long Sessions");
+    const longSessionsResult = await clickhouse.query({
+      query: `
+        SELECT 
+          countIf(dwellSeconds > 5) as longSessions,
+          count() as totalSessions,
+          (countIf(dwellSeconds > 5) / count()) * 100 as ratio
+        FROM analytics.sessions
+        WHERE startTime >= toDateTime('${startDate}') AND startTime <= toDateTime('${endDate}')
+      `
+    })
+
+    const longSessionsData = await longSessionsResult.json()
+    console.log("✅ Query 1 result:", JSON.stringify(longSessionsData, null, 2));
+    
+    // Query 2: User comeback rate
+    console.log("📊 Executing Query 2: Comeback Rate");
+    const comebackResult = await clickhouse.query({
+      query: `
+        SELECT 
+          uniqIf(visitorId, sessionCount >= 2) as returningUsers,
+          uniq(visitorId) as totalUsers,
+          (uniqIf(visitorId, sessionCount >= 2) / uniq(visitorId)) * 100 as comebackRate
+        FROM (
+          SELECT 
+            visitorId,
+            count() as sessionCount
+          FROM analytics.sessions
+          WHERE startTime >= toDateTime('${startDate}') AND startTime <= toDateTime('${endDate}')
+          GROUP BY visitorId
+        )
+      `
+    })
+
+    const comebackData = await comebackResult.json()
+    console.log("✅ Query 2 result:", JSON.stringify(comebackData, null, 2));
+
+    const longSessionRatio = longSessionsData.data[0]?.ratio || 0
+    const comeback = comebackData.data[0]?.comebackRate || 0
+    
+    console.log("📈 Final values:", { longSessionRatio, comeback });
+
+    const response = {
+      success: true,
+      data: {
+        longSessionRatio: Number(longSessionRatio).toFixed(2),
+        comebackRate: Number(comeback).toFixed(2)
+      }
+    };
+    
+    console.log("📤 Sending response:", JSON.stringify(response, null, 2));
+    return res.json(response)
+  } catch (error) {
+    console.error('❌ Error fetching session KPIs:', error)
+    return res.json({ error: error.message })
   }
 }
 

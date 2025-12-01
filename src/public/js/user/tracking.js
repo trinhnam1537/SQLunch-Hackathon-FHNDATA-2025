@@ -129,7 +129,7 @@ function throttle(func, delay) {
 const throttledMouseMove = throttle(() => sendEvent(activityEvent("mousemove")), 5000);
 const throttledScroll = throttle(() => sendEvent(activityEvent("scroll")), 1000);
 const throttledKeydown = throttle(() => sendEvent(activityEvent("keydown")), 5000);
-const throttledClick = throttle(() => sendEvent(activityEvent("click")), 400);
+const throttledClick = throttle(() => sendEvent(activityEvent("click")), 120);
 
 // ===============================================
 // NAVIGATION DETECTION (new/critical)

@@ -22,6 +22,7 @@ const adminProfileRoute     = require('./admin/profileRoute')
 const adminLogOutRoute      = require('./admin/logOutRoute')
 const adminRefreshRoute     = require('./admin/refreshToken')
 const analyticsRoute        = require('./admin/analyticsRoute')
+const sessionRoute          = require('./analytics/sessionRoute')
 
 // user
 const homeRoute           = require('./user/homeRoute')
@@ -62,6 +63,7 @@ function route(app) {
   app.use('/admin/all-attributes'    , checkAdmin, adminAttributesRoute)
   app.use('/admin/all-personal-info' , checkAdmin, adminProfileRoute)
   app.use('/admin/analytics'         , checkAdmin, analyticsRoute)
+  app.use('/api/analytics'           , sessionRoute)
   app.use('/admin/log-out'           , checkAdmin, adminLogOutRoute)
   app.use('/admin/refresh-token'     , checkAdmin, refreshRoute)
   app.use('/admin/*', function(req, res) {

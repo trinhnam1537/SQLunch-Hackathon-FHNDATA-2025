@@ -112,6 +112,28 @@ async function flushActiveCount() {
 setInterval(flushActiveCount, ACTIVE_COUNT_FLUSH_MS);
 
 
+let fraudBuffer = [];
+const FRAUD_FLUSH_INTERVAL_MS = 1500;
+
+async function flushFraud() {
+  if (fraudBuffer.length === 0) return;
+
+  const batch = fraudBuffer.splice(0, fraudBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "fraud_sessions",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ Fraud insert failed:", err);
+    fraudBuffer = [...batch, ...fraudBuffer];
+  }
+}
+
+setInterval(flushFraud, FRAUD_FLUSH_INTERVAL_MS);
+
 
 // -------------------------------------------------
 // REDIS ACTIVE SESSION MATERIALIZER (optimized)
@@ -136,26 +158,7 @@ async function updateRedisActiveSession(redis, event) {
       .exec();
   }
 }
-  // -------------------------------------------------
-  // INSERT ACTIVE SESSION COUNT INTO CLICKHOUSE
-  // -------------------------------------------------
-//   try {
-//     const activeKeys = await redis.keys("active:*");
-//     const count = activeKeys.length;
 
-//     activeCountBuffer.push({
-//       count,
-//       timestamp: new Date().toISOString().slice(0, 19).replace("T", " ")
-//     }); 
-
-//     if (activeCountBuffer.length >= ACTIVE_COUNT_BATCH) {
-//       flushActiveCount();
-//     }
-
-//   } catch (err) {
-//     console.error("❌ Failed to record active session count:", err);
-//   }
-// }
 
 
 // -------------------------------------------------
@@ -257,7 +260,12 @@ async function handleEvent(event, redis) {
       totalActions: 0,
       totalPageViews: 0,
       urlActionCounts: {},
-      productViewSet: new Set()
+      productViewSet: new Set(),
+
+      // FRAUD FIELDS
+      fraudRules: [],
+      lastEventTimestamps: [],
+      clickTimestamps: [],
     };
     sessions.set(sid, s);
   }
@@ -268,11 +276,63 @@ async function handleEvent(event, redis) {
   // UPDATE METRICS
   s.lastEventTime = ts;
 
+
+
+  // ----------------------------------------
+// FRAUD REAL-TIME SIGNALS
+// ----------------------------------------
+
+// Track event rate
+s.lastEventTimestamps.push(ts);
+if (s.lastEventTimestamps.length > 50)
+    s.lastEventTimestamps.shift();
+
+// More than 10 events/sec → bot
+if (s.lastEventTimestamps.length > 10) {
+  const delta = ts - s.lastEventTimestamps[0];
+  if (delta < 1000) {
+    s.fraudRules.push("high_event_rate");
+  }
+}
+
+// Track click frequency
+if (event.type === "action" && event.action === "click") {
+  s.clickTimestamps.push(ts);
+  if (s.clickTimestamps.length > 20) s.clickTimestamps.shift();
+
+  // constant interval ~120ms = bot
+  if (s.clickTimestamps.length >= 5) {
+    const diffs = [];
+    for (let i = 1; i < s.clickTimestamps.length; i++) {
+      diffs.push(s.clickTimestamps[i] - s.clickTimestamps[i-1]);
+    }
+    const avg = diffs.reduce((a,b)=>a+b,0) / diffs.length;
+    const variance = diffs.reduce((a,b)=>a+Math.pow(b-avg,2), 0) / diffs.length;
+
+    if (avg < 200 && variance < 80) {
+      s.fraudRules.push("constant_click_interval");
+    }
+  }
+}
+
+// Only heartbeat events → bot farm
+if (s && event.type === "heartbeat" && /// old is: if (event.type === "heartbeat" && 
+    s.totalClicks === 0 &&
+    s.totalActions < 3 &&
+    s.totalPageViews <= 1) 
+{
+  s.fraudRules.push("heartbeat_only_session");
+}
+
+
+
+
   const isProduct = PRODUCT_REGEX.test(url);
 
   if (event.type === "page_view") {
-    s.totalPageViews++;
-    s.urlEnd = url;
+      s.totalPageViews++;
+      if (!s.urlStart) s.urlStart = url;
+      s.urlEnd = url;
   }
 
   if (event.type === "action") {
@@ -296,13 +356,50 @@ async function handleEvent(event, redis) {
   }
 
   if (event.type === "page_exit") {
-    if (s.idleStart) {
-      s.totalIdleMs += ts - s.idleStart;
-      s.idleStart = null;
-    }
-    queueSessionFlush(s, ts);
-    sessions.delete(sid);
+
+      // finalize idle time
+      if (s.idleStart) {
+        s.totalIdleMs += ts - s.idleStart;
+        s.idleStart = null;
+      }
+
+      const sessionMinutes = (ts - s.startTime) / 60000;
+
+      // Fraud rules
+      if (s.totalPageViews / sessionMinutes > 20)
+          s.fraudRules.push("high_pageview_rate");
+
+      if (s.productViewSet.size / sessionMinutes > 50)
+          s.fraudRules.push("high_productview_rate");
+
+      if (s.totalIdleMs === 0 && sessionMinutes > 60)
+          s.fraudRules.push("impossible_no_idle_long_session");
+
+      // Deduplicate fraud rules to avoid inflated scores
+      const uniqueRules = [...new Set(s.fraudRules)];
+      const fraud_score = uniqueRules.length;
+      let fraud_level = "normal";
+      if (fraud_score >= 3) fraud_level = "fraud";
+      else if (fraud_score === 2) fraud_level = "suspicious";
+      else if (fraud_score === 1) fraud_level = "monitor";
+
+      if (fraud_score > 0) {
+        fraudBuffer.push({
+          sessionId: s.sessionId,
+          userId: s.visitorId,
+          fraud_score,
+          fraud_level,
+          rulesHit: uniqueRules,
+          startTime: new Date(s.startTime).toISOString().slice(0, 19).replace("T", " "),
+          endTime: new Date(ts).toISOString().slice(0, 19).replace("T", " ")
+        });
+      }
+
+      queueSessionFlush(s, ts);
+      sessions.delete(sid);
   }
+
+
 }
 
 // -------------------------------------------------
@@ -360,8 +457,10 @@ async function EndSessionConsumerStart() {
   }, ACTIVE_POLL_INTERVAL_MS);
 
   // stop poller cleanly if process exiting
-  process.on('SIGINT', () => { pollerStopped = true; clearInterval(activePoller); });
-  process.on('SIGTERM', () => { pollerStopped = true; clearInterval(activePoller); });
+// No-op: allow PM2 to stop workers safely
+  process.on("SIGINT", () => process.exit(0));
+  process.on("SIGTERM", () => process.exit(0));
+
 
 
 
