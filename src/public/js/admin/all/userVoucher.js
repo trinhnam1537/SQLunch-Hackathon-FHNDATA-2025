@@ -227,7 +227,6 @@ async function updateVoucher() {
   }
 
   detailModal.querySelector('button[type="submit"]').classList.add('loading')
-
   const response = await fetch('/admin/all-u-vouchers/voucher/updated', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -240,14 +239,14 @@ async function updateVoucher() {
     })
   })
 
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
+  if (!response.ok) throw new Error('Updated Failed')
   const { error, message } = await response.json()
 
-  detailModal.querySelector('button[type="submit"]').classList.remove('loading')
   if (error) return pushNotification(error)
 
   pushNotification(message)
   detailModal.classList.remove('show')
+  detailModal.querySelector('button[type="submit"]').classList.remove('loading')
   await getVouchers(sortOptions, filterOptions, currentPage.page, 10)
 }
 
@@ -277,6 +276,7 @@ async function createVoucher() {
     return pushNotification('Please fill in all information!')
   }
 
+  createSubmitBtn.classList.add('loading')
   const response = await fetch('/admin/all-vouchers/voucher/created', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -285,12 +285,13 @@ async function createVoucher() {
     })
   })
 
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
+  if (!response.ok) throw new Error('Created Failed')
   const { error, message } = await response.json()
   if (error) return pushNotification(error)
 
   pushNotification(message)
   createModal.classList.remove('show')
+  createSubmitBtn.classList.remove('loading')
   await getVouchers(sortOptions, filterOptions, currentPage.page, 10)
 }
 
@@ -302,7 +303,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     generateColumns()
     await getVouchers(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getVouchers, sortOptions, filterOptions, currentPage.page)
-    await exportJs('BÁO CÁO DANH SÁCH VOUCHER NGƯỜI DÙNG')
+    await exportJs('VOUCHER LIST REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')

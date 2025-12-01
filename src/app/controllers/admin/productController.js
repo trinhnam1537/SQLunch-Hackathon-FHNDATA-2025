@@ -136,45 +136,78 @@ class allProductsController {
     }
   }
 
-  async productUpdated(req, res, next) {  
+  async productUpdated(req, res, next) {
     try {
-      function deFormatNumber(number) {
-        return parseInt(number.toString().replace(/\./g, ''))
+      const deFormatNumber = (number) => {
+        if (!number) return 0;
+        return parseInt(number.toString().replace(/\./g, ""), 10);
+      };
+
+      let imageUpdate = {}; // Will hold img fields only if new image uploaded
+
+      // Step 1: Upload new image to Cloudinary if provided
+      if (req.body.img) {
+        const result = await cloudinary.uploader.upload(req.body.img, {
+          folder: "products",
+          use_filename: true,
+          unique_filename: false,
+        });
+
+        imageUpdate = {
+          "img.path": result.secure_url,
+          "img.filename": result.public_id,
+        };
+
+        // Optional: Delete old image from Cloudinary (uncomment if needed)
+        // if (req.body.oldImageId) {
+        //   await cloudinary.uploader.destroy(req.body.oldImageId);
+        // }
       }
-  
+
+      // Step 2: Prepare update object (only include image fields if uploaded)
+      const updateData = {
+        categories: req.body.categories,
+        subcategories: req.body.subcategories,
+        brand: req.body.brand,
+        name: req.body.name,
+        purchasePrice: deFormatNumber(req.body.purchasePrice),
+        oldPrice: deFormatNumber(req.body.oldPrice),
+        price: deFormatNumber(req.body.price),
+        description: req.body.description,
+        details: req.body.details,
+        guide: req.body.guide,
+        quantity: parseInt(req.body.quantity) || 0,
+        status: req.body.status,
+        isFlashDeal: req.body.isFlashDeal === "true" || req.body.isFlashDeal === true,
+        isNewArrival: req.body.isNewArrival === "true" || req.body.isNewArrival === true,
+        ...imageUpdate, // Spread only if image was uploaded
+      };
+
+      // Step 3: Update product in MongoDB
       const updatedProduct = await product.findOneAndUpdate(
         { _id: req.body.id },
-        {
-          $set: {
-            categories    : req.body.categories,
-            subcategories : req.body.subcategories,
-            brand         : req.body.brand,
-            name          : req.body.name,
-            purchasePrice : deFormatNumber(req.body.purchasePrice),
-            oldPrice      : deFormatNumber(req.body.oldPrice),
-            price         : deFormatNumber(req.body.price),
-            description   : req.body.description,
-            details       : req.body.details,
-            guide         : req.body.guide,
-            quantity      : req.body.quantity,
-            status        : req.body.status,
-            isFlashDeal   : req.body.isFlashDeal,
-            isNewArrival  : req.body.isNewArrival,
-          }
-        },
-        { new: true }
-      )
-  
-      return res.json({message: 'Updated successfully'})
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedProduct) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      return res.json({
+        message: "Product updated successfully",
+        product: updatedProduct,
+      });
     } catch (error) {
-      return res.json({error: error.message})
-    }  
+      console.error("Update product error:", error);
+      return res.status(500).json({ error: error.message });
+    }
   }
 
   async softDelete(req, res, next) {
     try {
       await product.updateOne({ _id: req.body.id}, { deletedAt: Date.now() })
-      return res.json({isValid: true, message: 'Deleted successfully'})
+      return res.json({isValid: true, message: 'Move product to trash successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }
@@ -188,7 +221,7 @@ class allProductsController {
       await cloudinary.uploader.destroy(deleteImg)
       await product.deleteOne({ _id: req.body.id })
   
-      return res.json({isValid: true, message: 'Move product to trash successfully'})
+      return res.json({isValid: true, message: 'Delete product successfully'})
     } catch (error) {
       return res.json({error: error.message})
     }

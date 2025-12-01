@@ -367,7 +367,7 @@ async function updateProduct() {
   detailUpdateBtn.classList.remove('loading')
 
   if (!response.ok) {
-    pushNotification('Update failed')
+    pushNotification('Updated Failed')
     return
   }
 
@@ -407,40 +407,48 @@ createModal?.querySelector('input#img')?.addEventListener('change', function () 
 })
 
 async function createProduct() {
-  const categories    = createModal.querySelector('select[name="categories"]')?.value
-  const subcategories = createModal.querySelector('select[name="subcategories"]')?.value || ''
-  const brand         = createModal.querySelector('select[name="brand"]')?.value
-  const name          = createModal.querySelector('input#name')?.value.trim()
-  const purchasePrice = deFormatNumber(createModal.querySelector('input#purchasePrice')?.value || '0')
-  const oldPrice      = deFormatNumber(createModal.querySelector('input#oldPrice')?.value || '0')
-  const price         = deFormatNumber(createModal.querySelector('input#price')?.value || '0')
-  const description   = createModal.querySelector('input#description')?.value
-  const details       = createModal.querySelector('input#details')?.value
-  const guide         = createModal.querySelector('input#guide')?.value
-  const quantity      = createModal.querySelector('input#quantity')?.value
-
-  if (!categories || !brand || !name || !purchasePrice || !oldPrice || !price || !description || !details || !guide || !quantity || !createImgPath.path) {
-    return pushNotification('Please fill in all information!')
-  }
-
-  const response = await fetch('/admin/all-products/product/created', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      categories, subcategories, brand, name, purchasePrice,
-      oldPrice, price, description, details, guide, quantity,
-      img: createImgPath.path
+  try {
+    const categories    = createModal.querySelector('select[name="categories"]')?.value
+    const subcategories = createModal.querySelector('select[name="subcategories"]')?.value || ''
+    const brand         = createModal.querySelector('select[name="brand"]')?.value
+    const name          = createModal.querySelector('input#name')?.value.trim()
+    const purchasePrice = deFormatNumber(createModal.querySelector('input#purchasePrice')?.value || '0')
+    const oldPrice      = deFormatNumber(createModal.querySelector('input#oldPrice')?.value || '0')
+    const price         = deFormatNumber(createModal.querySelector('input#price')?.value || '0')
+    const description   = createModal.querySelector('input#description')?.value
+    const details       = createModal.querySelector('input#details')?.value
+    const guide         = createModal.querySelector('input#guide')?.value
+    const quantity      = createModal.querySelector('input#quantity')?.value
+  
+    if (!categories || !brand || !name || !purchasePrice || !oldPrice || !price || !description || !details || !guide || !quantity || !createImgPath.path) {
+      return pushNotification('Please fill in all information!')
+    }
+  
+    createSubmitBtn.classList.add('loading')
+    const response = await fetch('/admin/all-products/product/created', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        categories, subcategories, brand, name, purchasePrice,
+        oldPrice, price, description, details, guide, quantity,
+        img: createImgPath.path
+      })
     })
-  })
-
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const { error, message } = await response.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  createModal.classList.remove('show')
-  createImgPath.path = ''
-  await getProducts(sortOptions, filterOptions, currentPage.page, 10)
+  
+    if (!response.ok) throw new Error('Created Failed')
+    const { error, message } = await response.json()
+    if (error) return pushNotification(error)
+  
+    pushNotification(message)
+    createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
+    createImgPath.path = ''
+    await getProducts(sortOptions, filterOptions, currentPage.page, 10)
+  } catch (error) {
+    console.error('Error creating product:', error)
+    pushNotification("Product creation failed")
+    createSubmitBtn.classList.remove('loading')
+  }
 }
 
 if (createSubmitBtn) createSubmitBtn.onclick = () => createProduct()
@@ -452,7 +460,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     await getFilter()
     await getProducts(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getProducts, sortOptions, filterOptions, currentPage.page)
-    await exportJs('PRODUCTS REPORT')
+    await exportJs('PRODUCT LIST REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')

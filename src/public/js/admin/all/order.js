@@ -196,8 +196,6 @@ async function openOrderDetail(orderId) {
     detailModal.querySelector('input#id').value           = orderInfo._id
     detailModal.querySelector('input#date').value         = formatDate(orderInfo.createdAt)
     detailModal.querySelector('input#name').value         = orderInfo.customerInfo?.name || 'Guest'
-    detailModal.querySelector('a#customer-link').href     = orderInfo.customerInfo?.userId && orderInfo.customerInfo.userId !== 'guest'
-      ? `/admin/all-customers/customer/${orderInfo.customerInfo.userId}` : '#'
     detailModal.querySelector('input#phone').value        = orderInfo.customerInfo?.phone || ''
     detailModal.querySelector('input#address').value      = orderInfo.customerInfo?.address || ''
     detailModal.querySelector('input#note').value         = orderInfo.customerInfo?.note || ''
@@ -291,44 +289,45 @@ async function openOrderDetail(orderId) {
 }
 
 async function updateOrder() {
-  const status        = detailModal.querySelector('select#status').value
-  const paymentMethod = detailModal.querySelector('select#paymentMethod').value
-  const isPaid        = detailModal.querySelector('select#isPaid').value === 'true'
-
-  if (
-    status        === currentOrderInfo.status &&
-    paymentMethod === currentOrderInfo.paymentMethod &&
-    isPaid        === currentOrderInfo.isPaid
-  ) {
-    return pushNotification('Please update the information')
-  }
-
-  detailUpdateBtn.classList.add('loading')
-
-  const response = await fetch('/admin/all-orders/order/updated', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: currentOrderInfo._id,
-      status,
-      paymentMethod,
-      isPaid
+  try {
+    const status        = detailModal.querySelector('select#status').value
+    const paymentMethod = detailModal.querySelector('select#paymentMethod').value
+    const isPaid        = detailModal.querySelector('select#isPaid').value === 'true'
+  
+    if (
+      status        === currentOrderInfo.status &&
+      paymentMethod === currentOrderInfo.paymentMethod &&
+      isPaid        === currentOrderInfo.isPaid
+    ) {
+      return pushNotification('Please update the information')
+    }
+  
+    detailUpdateBtn.classList.add('loading')
+    const response = await fetch('/admin/all-orders/order/updated', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: currentOrderInfo._id,
+        status,
+        paymentMethod,
+        isPaid
+      })
     })
-  })
-
-  detailUpdateBtn.classList.remove('loading')
-
-  if (!response.ok) {
-    pushNotification('Update failed')
-    return
+  
+    if (!response.ok) throw new Error('Updated Failed')
+    const { error, message } = await response.json()
+    if (error) throw new Error(error)
+  
+    pushNotification(message)
+    detailModal.classList.remove('show')
+    detailUpdateBtn.classList.remove('loading')
+    await getOrders(sortOptions, filterOptions, currentPage.page, 10)
+    
+  } catch (error) {
+    console.error('Error updating order:', error)
+    pushNotification("Order update failed")
+    detailUpdateBtn.classList.remove('loading')
   }
-
-  const { error, message } = await response.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  detailModal.classList.remove('show')
-  await getOrders(sortOptions, filterOptions, currentPage.page, 10)
 }
 
 detailUpdateBtn.onclick = () => updateOrder()
@@ -437,7 +436,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     await getFilter()
     await getOrders(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getOrders, sortOptions, filterOptions, currentPage.page)
-    await exportJs('ORDER LIST')
+    await exportJs('ORDER LIST REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')

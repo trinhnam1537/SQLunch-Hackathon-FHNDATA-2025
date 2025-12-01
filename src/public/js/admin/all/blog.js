@@ -238,72 +238,70 @@ async function openBlogDetail(blogId) {
 }
 
 async function updateBlog() {
-  if (!currentBlog) return
+  try {
+    if (!currentBlog) return;
 
-  const title        = detailModal.querySelector('#title').value.trim()
-  const summary      = detailModal.querySelector('#summary').value.trim()
-  const content      = detailModal.querySelector('#content').value.trim()
-  const categoryName = detailModal.querySelector('#categoryName').value.trim()
-  const categorySlug = detailModal.querySelector('#categorySlug').value.trim()
-  const tags         = detailModal.querySelector('#tags').value.split(',').map(t => t.trim()).filter(Boolean)
-  const status       = detailModal.querySelector('#status').value
+    const title        = detailModal.querySelector('#title').value.trim();
+    const summary      = detailModal.querySelector('#summary').value.trim();
+    const content      = detailModal.querySelector('#content').value.trim();
+    const categoryName = detailModal.querySelector('#categoryName').value.trim();
+    const categorySlug = detailModal.querySelector('#categorySlug').value.trim();
+    const tagsInput    = detailModal.querySelector('#tags').value;
+    const tags         = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+    const status       = detailModal.querySelector('#status').value;
 
-  if (!title || !content) {
-    return pushNotification('Title and content are required!')
+    if (!title || !content) {
+      return pushNotification('Title and content are required!', 'error');
+    }
+
+    // Build payload
+    const payload = {
+      id: currentBlog._id,
+      title,
+      summary,
+      content,
+      category: JSON.stringify({ name: categoryName, slug: categorySlug }), // send as string
+      tags: JSON.stringify(tags), // send as string
+      status,
+      // Only send oldImageId if we have current image in DB
+      oldImageId: currentBlog.img?.filename || null
+    };
+
+    // If user uploaded a NEW image → send base64 + keep oldImageId for cleanup
+    if (imgPath.path) {
+      payload.img = imgPath.path; // this is base64 data URL
+    }
+
+    // Auto-set publishedAt on frontend? → Let backend handle this safely!
+    // (We removed frontend logic – backend is the source of truth)
+
+    updateBtn.classList.add('loading');
+
+    const res = await fetch('/admin/all-blogs/blog/updated', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Update failed');
+    }
+
+    pushNotification(data.message || 'Blog updated successfully!', 'success');
+    
+    // Reset & refresh
+    detailModal.classList.remove('show');
+    imgPath.path = ''; // clear preview
+    await getBlogs(sortOptions, filterOptions, currentPage.page, 10);
+
+  } catch (error) {
+    console.error('Update blog error:', error);
+    pushNotification(error.message || 'Failed to update blog', 'error');
+  } finally {
+    updateBtn.classList.remove('loading');
   }
-
-  // Auto set publishedAt when status changes to published
-  let publishedAt = currentBlog.publishedAt
-  if (status === 'published' && currentBlog.status !== 'published') {
-    publishedAt = new Date().toISOString()
-  } else if (status === 'draft') {
-    publishedAt = null
-  }
-
-  const hasChanged =
-    title !== currentBlog.title ||
-    summary !== (currentBlog.summary || '') ||
-    content !== (currentBlog.content || '') ||
-    categoryName !== (currentBlog.category?.name || '') ||
-    categorySlug !== (currentBlog.category?.slug || '') ||
-    JSON.stringify(tags) !== JSON.stringify(currentBlog.tags || []) ||
-    status !== currentBlog.status ||
-    imgPath.path
-
-  if (!hasChanged) {
-    return pushNotification('Please update the information')
-  }
-
-  updateBtn.classList.add('loading')
-
-  const payload = {
-    id: currentBlog._id,
-    title,
-    summary,
-    content,
-    category: { name: categoryName, slug: categorySlug },
-    tags,
-    status,
-    publishedAt
-  }
-  if (imgPath.path) payload.featuredImage = imgPath.path
-
-  const res = await fetch('/admin/all-blogs/blog/updated', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-
-  updateBtn.classList.remove('loading')
-  if (!res.ok) return pushNotification('Update failed')
-
-  const { error, message } = await res.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  detailModal.classList.remove('show')
-  imgPath.path = ''
-  await getBlogs(sortOptions, filterOptions, currentPage.page, 10)
 }
 
 updateBtn.onclick = updateBlog
@@ -329,36 +327,44 @@ createModal.querySelector('input#featuredImage')?.addEventListener('change', fun
 })
 
 async function createBlog() {
-  const title   = createModal.querySelector('#title')?.value.trim()
-  const summary = createModal.querySelector('#summary')?.value.trim()
-  const content = createModal.querySelector('#content')?.value.trim()
+  try {
+    const title   = createModal.querySelector('#title')?.value.trim()
+    const summary = createModal.querySelector('#summary')?.value.trim()
+    const content = createModal.querySelector('#content')?.value.trim()
 
-  if (!title || !content || !createImgPath.path) {
-    return pushNotification('Title, content, and image are required!')
+    if (!title || !content || !createImgPath.path) {
+      return pushNotification('Title, content, and image are required!')
+    }
+
+    const payload = {
+      title,
+      summary,
+      content,
+      image: createImgPath.path,
+      status: 'draft'
+    }
+
+    createSubmitBtn.classList.add('loading')
+    const res = await fetch('/admin/all-blogs/blog/created', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) throw new Error('Created Failed')
+    const { error, message } = await res.json()
+    if (error) throw new Error(error)
+
+    pushNotification(message)
+    createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
+    createImgPath.path = ''
+    await getBlogs(sortOptions, filterOptions, currentPage.page, 10)
+  } catch (error) {
+    console.error('Error creating blog:', error)
+    pushNotification("Blog creation failed")
+    createSubmitBtn.classList.remove('loading')
   }
-
-  const payload = {
-    title,
-    summary,
-    content,
-    image: createImgPath.path,
-    status: 'draft'
-  }
-
-  const res = await fetch('/admin/all-blogs/blog/created', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-
-  if (!res.ok) throw new Error(`Status: ${res.status}`)
-  const { error, message } = await res.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  createModal.classList.remove('show')
-  createImgPath.path = ''
-  await getBlogs(sortOptions, filterOptions, currentPage.page, 10)
 }
 
 createSubmitBtn.onclick = createBlog

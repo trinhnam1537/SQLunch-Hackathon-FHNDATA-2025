@@ -120,7 +120,6 @@ p.trash a:hover, p.products a:hover {
 }
 
 #clear-sort-filter {
-  padding: 10px 20px;
   border: none;
   border-radius: 8px;
   background: linear-gradient(135deg, #d4183d, #ff5a5a);

@@ -192,22 +192,20 @@ async function updateSupplier() {
   }
 
   updateBtn.classList.add('loading')
-
   const res = await fetch('/admin/all-suppliers/supplier/updated', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: currentSupplier._id, name, phone, address })
   })
 
-  updateBtn.classList.remove('loading')
-
-  if (!res.ok) return pushNotification('Update failed')
+  if (!res.ok) throw new Error('Updated Failed')
 
   const { error, message } = await res.json()
   if (error) return pushNotification(error)
 
   pushNotification(message)
   detailModal.classList.remove('show')
+  updateBtn.classList.remove('loading')
   await getSuppliers(sortOptions, filterOptions, currentPage.page, 10)
 }
 
@@ -233,18 +231,20 @@ async function createSupplier() {
     return pushNotification('Please fill in all required fields!')
   }
 
+  createSubmitBtn.classList.add('loading')
   const res = await fetch('/admin/all-suppliers/supplier/created', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, phone, address })
   })
 
-  if (!res.ok) throw new Error(`Status: ${res.status}`)
+  if (!res.ok) throw new Error('Created Failed')
   const { error, message } = await res.json()
   if (error) return pushNotification(error)
 
   pushNotification(message)
   createModal.classList.remove('show')
+  createSubmitBtn.classList.remove('loading')
   await getSuppliers(sortOptions, filterOptions, currentPage.page, 10)
 }
 

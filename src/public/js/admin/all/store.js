@@ -178,7 +178,6 @@ async function updateStore() {
   }
 
   detailUpdateBtn.classList.add('loading')
-
   const response = await fetch('/admin/all-stores/store/updated', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -190,18 +189,14 @@ async function updateStore() {
     })
   })
 
-  detailUpdateBtn.classList.remove('loading')
-
-  if (!response.ok) {
-    pushNotification('Update failed')
-    return
-  }
+  if (!response.ok) throw new Error('Updated Failed')
 
   const { error, message } = await response.json()
   if (error) return pushNotification(error)
 
   pushNotification(message)
   detailModal.classList.remove('show')
+  detailUpdateBtn.classList.remove('loading')
   await getStores(sortOptions, filterOptions, currentPage.page, 10)
 }
 
@@ -226,18 +221,20 @@ async function createStore() {
     return pushNotification('Please fill in all information!')
   }
 
+  createSubmitBtn.classList.add('loading')
   const response = await fetch('/admin/all-stores/store/created', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, address, details })
   })
 
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
+  if (!response.ok) throw new Error('Created Failed')
   const { error, message } = await response.json()
   if (error) return pushNotification(error)
 
   pushNotification(message)
   createModal.classList.remove('show')
+  createSubmitBtn.classList.remove('loading')
   await getStores(sortOptions, filterOptions, currentPage.page, 10)
 }
 
@@ -249,7 +246,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     generateColumns()
     await getStores(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getStores, sortOptions, filterOptions, currentPage.page)
-    await exportJs('BÁO CÁO DANH SÁCH CỬA HÀNG')
+    await exportJs('STORE LIST REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')

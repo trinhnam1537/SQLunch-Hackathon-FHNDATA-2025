@@ -341,7 +341,7 @@ async function loadRelatedProducts(type, container) {
     } else if (type === 'viewed') {
       endpoint = '/all-products/data/related-viewed'
     } else if (type === 'recommended') {
-      endpoint = 'http://localhost:8000/recommend'
+      endpoint = 'http://localhost:8000/recommend/'
       filter = {
         productId: productInfo._id,     // current viewed product
         mode: "product"
@@ -356,8 +356,6 @@ async function loadRelatedProducts(type, container) {
     })
 
     const data = await response.json()
-
-    console.log(data)
     
     if (data.data && data.data.length > 0) {
       // Clear loading placeholder
