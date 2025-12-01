@@ -30,9 +30,9 @@ setTimeout(() => {
 }, 5000);
 
 
-const { startAllConsumers } = require('./app/kafka/RunAllConsumers');
+// const { startAllConsumers } = require('./app/kafka/RunAllConsumers');
 
-startAllConsumers();
+// startAllConsumers();
 
 
 app.use(express.json({ limit: '50mb' }))

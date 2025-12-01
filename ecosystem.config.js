@@ -16,7 +16,7 @@ module.exports = {
     {
       name: "session-consumer",
       script: "src/app/kafka/EndSessionConsumer.js",
-      instances: 1,                          // 3 Kafka consumers
+      instances: 3,                          // 3 Kafka consumers
       exec_mode: "cluster",
       watch: false                           // ❌ DO NOT RESTART automatically
     }

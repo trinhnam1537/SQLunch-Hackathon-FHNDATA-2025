@@ -18,3 +18,5 @@ matomo_config/certs/matomo.localhost.pem
 
 src/app/redis/clear.js
 src/app/redis/query.js
+
+batch_pipeline/

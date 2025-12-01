@@ -12,7 +12,17 @@ const orderStatus = require('../../models/orderStatusModel')
 const member = require('../../models/memberModel')
 const position = require('../../models/positionModel')
 const { clickhouse } = require('../../kafka/ClickhouseConection');
+const redis = require("redis");
 
+const redisClient = redis.createClient({
+  url: "redis://localhost:6379"
+});
+
+redisClient.connect().then(() => {
+  console.log("Connected to Redis.");
+}).catch(err => {
+  console.error("Redis connection error:", err);
+});
 
 
 class homeController {
@@ -333,21 +343,30 @@ class homeController {
   //   }
   // }
 
-  async getActiveUsersRealtime(req, res) {
-    try {
-      // Count keys matching "active:*"
-      const keys = await redisClient.keys("active:*");
-      const activeCount = keys.length;
+async getActiveUsersRealtime(req, res) {
+  try {
+    let cursor = "0";
+    let total = 0;
 
-      return res.json({
-        current: activeCount
+    do {
+      const reply = await redisClient.scan(cursor, {
+        MATCH: "active:*",
+        COUNT: 500
       });
 
-    } catch (error) {
-      console.error("Redis realtime error:", error);
-      return res.json({ current: 0 });
-    }
+      cursor = reply.cursor;
+      total += reply.keys.length;
+
+    } while (cursor !== "0");
+
+    return res.json({ current: total });
+
+  } catch (error) {
+    console.error("Redis realtime error:", error);
+    return res.json({ current: 0 });
   }
+}
+
 
 }
 module.exports = new homeController

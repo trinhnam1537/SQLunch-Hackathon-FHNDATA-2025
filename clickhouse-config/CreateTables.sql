@@ -48,24 +48,17 @@ CREATE TABLE analytics.sessions
 ENGINE = ReplacingMergeTree(_version)
 ORDER BY (sessionId);
 
--- CREATE TABLE analytics.visitors (
---   visitorId String,
---   date Date,
---   first_seen DateTime,
---   last_seen DateTime
--- ) ENGINE = ReplacingMergeTree()
--- ORDER BY (visitorId, date);
 
--- CREATE MATERIALIZED VIEW analytics.mv_visitors
--- TO analytics.visitors
--- AS
--- SELECT
---   visitorId,
---   toDate(timestamp) AS date,
---   min(timestamp) AS first_seen,
---   max(timestamp) AS last_seen
--- FROM kafka.events
--- GROUP BY visitorId, date;
+
+
+CREATE TABLE analytics.active_session_count (
+    count Int32,
+    timestamp DateTime,
+    updated_at DateTime DEFAULT now()
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY timestamp;
+
 
 
 -------------------------------------------------

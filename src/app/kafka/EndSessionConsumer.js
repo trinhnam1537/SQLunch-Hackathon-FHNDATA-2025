@@ -36,6 +36,7 @@ let chLastFlush = Date.now();
 const CH_BATCH_SIZE = 500;
 const CH_FLUSH_INTERVAL = 1000;
 
+
 // -------------------------------------------------
 // SESSION VALIDATION STATE (your old logic)
 // -------------------------------------------------
@@ -83,6 +84,35 @@ async function flushCH() {
 
 setInterval(flushCH, CH_FLUSH_INTERVAL);
 
+
+// -------------------------------------------------
+// CLICKHOUSE: ACTIVE SESSION COUNT TABLE
+// -------------------------------------------------
+let activeCountBuffer = [];
+const ACTIVE_COUNT_BATCH = 200;
+const ACTIVE_COUNT_FLUSH_MS = 2000;
+
+async function flushActiveCount() {
+  if (activeCountBuffer.length === 0) return;
+
+  const batch = activeCountBuffer.splice(0, activeCountBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "active_session_count",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ ClickHouse active_count insert failed:", err);
+    activeCountBuffer = [...batch, ...activeCountBuffer];
+  }
+}
+
+setInterval(flushActiveCount, ACTIVE_COUNT_FLUSH_MS);
+
+
+
 // -------------------------------------------------
 // REDIS ACTIVE SESSION MATERIALIZER (optimized)
 // -------------------------------------------------
@@ -92,22 +122,41 @@ async function updateRedisActiveSession(redis, event) {
 
   if (event.type === "page_exit") {
     await redis.del(key);
-    return;
+  } else {
+    await redis
+      .multi()
+      .hSet(key, {
+        sessionId: sid,
+        visitorId: event.userId,
+        lastEventTime: event.timestamp,
+        lastEventType: event.type,
+        url: event.url || ""
+      })
+      .expire(key, SESSION_TTL_SEC)
+      .exec();
   }
-
-  // MULTI = atomic pipeline, 1 round-trip
-  await redis
-    .multi()
-    .hSet(key, {
-      sessionId: sid,
-      visitorId: event.userId,
-      lastEventTime: event.timestamp,
-      lastEventType: event.type,
-      url: event.url || ""
-    })
-    .expire(key, SESSION_TTL_SEC)
-    .exec();
 }
+  // -------------------------------------------------
+  // INSERT ACTIVE SESSION COUNT INTO CLICKHOUSE
+  // -------------------------------------------------
+//   try {
+//     const activeKeys = await redis.keys("active:*");
+//     const count = activeKeys.length;
+
+//     activeCountBuffer.push({
+//       count,
+//       timestamp: new Date().toISOString().slice(0, 19).replace("T", " ")
+//     }); 
+
+//     if (activeCountBuffer.length >= ACTIVE_COUNT_BATCH) {
+//       flushActiveCount();
+//     }
+
+//   } catch (err) {
+//     console.error("❌ Failed to record active session count:", err);
+//   }
+// }
+
 
 // -------------------------------------------------
 // END SESSION → CLICKHOUSE (unchanged, but batched)
@@ -261,6 +310,60 @@ async function handleEvent(event, redis) {
 // -------------------------------------------------
 async function EndSessionConsumerStart() {
   const redis = await getRedis();
+
+
+  const ACTIVE_POLL_INTERVAL_MS = 5000;
+
+  async function countActiveSessions() {
+    let cursor = "0";
+    let total = 0;
+
+    try {
+      do {
+        const reply = await redis.scan(
+          cursor,
+          "MATCH", "active:*",
+          "COUNT", "500"
+        );
+
+        cursor = reply.cursor;
+        total += reply.keys.length;
+
+      } while (cursor !== "0");
+
+      return total;
+    } catch (err) {
+      console.error("Error scanning Redis:", err);
+      return 0;
+    }
+  }
+
+  setInterval(async () => {
+    try {
+      const count = await countActiveSessions();
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+      activeCountBuffer.push({
+        count,
+        timestamp: now,
+        updated_at: now
+      });
+
+      if (activeCountBuffer.length >= ACTIVE_COUNT_BATCH) {
+        flushActiveCount().catch(err => {
+          console.error("❌ flushActiveCount error:", err);
+        });
+      }
+    } catch (err) {
+      console.error("❌ Active count poller error:", err);
+    }
+  }, ACTIVE_POLL_INTERVAL_MS);
+
+  // stop poller cleanly if process exiting
+  process.on('SIGINT', () => { pollerStopped = true; clearInterval(activePoller); });
+  process.on('SIGTERM', () => { pollerStopped = true; clearInterval(activePoller); });
+
+
 
   // Clear old active sessions at boot
   const keys = await redis.keys("active:*");
