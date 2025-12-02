@@ -148,38 +148,73 @@ class blogController {
     }
   }
 
-  async blogUpdate(req, res, next) {
+  async blogUpdate(req, res) {
     try {
-      const { id, title, summary, content, category, tags, status } = req.body
+      const { id, title, summary, content, category, tags, status, img, oldImageId } = req.body;
 
       if (!id || !title || !summary || !content) {
-        return res.json({ error: 'ID, title, summary, and content are required' })
+        return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      const updateData = {
+      let updateData = {
         title,
         summary,
         content,
-        category: category ? JSON.parse(category) : undefined,
-        tags: tags ? JSON.parse(tags) : undefined,
-        status
-      }
+        status,
+      };
 
-      // If changing to published, set published date
-      if (status === 'published') {
-        const existingBlog = await blog.findOne({ _id: id })
-        if (!existingBlog.publishedAt) {
-          updateData.publishedAt = new Date()
+      // Parse JSON strings from frontend
+      if (category) updateData.category = JSON.parse(category);
+      if (tags) updateData.tags = JSON.parse(tags);
+
+      // Handle image upload
+      if (img && img.startsWith('data:image')) {
+        const uploadResult = await cloudinary.uploader.upload(img, {
+          folder: 'blogs',
+          use_filename: true,
+          unique_filename: false,
+          overwrite: true
+        });
+
+        updateData.img = {
+          path: uploadResult.secure_url,
+          filename: uploadResult.public_id
+        };
+
+        // Delete old image if exists and different
+        if (oldImageId && oldImageId !== uploadResult.public_id) {
+          await cloudinary.uploader.destroy(oldImageId).catch(console.log);
         }
       }
 
-      const updatedBlog = await blog.findByIdAndUpdate(id, updateData, { new: true })
-      
-      if (!updatedBlog) throw new Error('Blog not found')
+      // Auto-set publishedAt: only once, when first going to "published"
+      const existingBlog = await blog.findById(id);
+      if (!existingBlog) {
+        return res.status(404).json({ error: 'Blog not found' });
+      }
 
-      return res.json({ message: 'Blog updated successfully', blog: updatedBlog })
+      if (status === 'published' && existingBlog.status !== 'published' && !existingBlog.publishedAt) {
+        updateData.publishedAt = new Date();
+      }
+
+      // If changing back to draft, optionally keep publishedAt (or clear it)
+      // Remove this line if you want to keep the original publish date
+      // if (status === 'draft') updateData.publishedAt = null;
+
+      const updatedBlog = await blog.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+
+      return res.json({
+        message: 'Blog updated successfully',
+        blog: updatedBlog
+      });
+
     } catch (error) {
-      return res.json({ error: error.message })
+      console.error('Blog update error:', error);
+      return res.status(500).json({ error: error.message });
     }
   }
 
