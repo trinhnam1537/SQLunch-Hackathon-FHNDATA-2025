@@ -182,7 +182,7 @@ AIsendBtn.onclick = async function() {
     chat.classList.add('right-content')
 
     const answer = document.createElement('li')
-    answer.textContent = 'Loading...'
+    answer.textContent = 'Bạn chờ xíu nha...'
     answer.classList.add('left-content')
     AIchatContent.appendChild(answer)
     AIchatContent.scrollTo(0, AIchatContent.scrollHeight)

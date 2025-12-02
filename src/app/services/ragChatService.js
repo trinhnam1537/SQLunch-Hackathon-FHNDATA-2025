@@ -10,7 +10,7 @@
 
 require('dotenv').config()
 
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000/chatbot'
 const FASTAPI_TIMEOUT = parseInt(process.env.FASTAPI_TIMEOUT || '30000', 10)
 
 /**

@@ -9,7 +9,6 @@ async function getVouchers() {
 
   
   if (!window.isLoggedIn) return
-  console.log(window.isLoggedIn)
   document.querySelector('div[class="vouchers-board"][id="voucher"]').style.display = 'flex'
 
   try {
@@ -57,7 +56,7 @@ async function getFavProducts() {
   if (!window.isLoggedIn) return
   document.querySelector('div[class="products-board"][id="favorite"]').style.display = 'flex'
       try { 
-    const response = await fetch(`http://localhost:8000/recommend`, {
+    const response = await fetch(`http://localhost:8000/recommend/`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ // current viewed product
@@ -67,7 +66,6 @@ async function getFavProducts() {
     if (!response.ok) throw new Error(`Response status: ${response.status}`)
     const response_data = await response.json()
     const data = response_data.data
-    console.log(data)
     const favProductsDiv = document.querySelector('div[class="products-board"][id="favorite"]').querySelectorAll('div.product')
     window.setTimeout(function() {
       favProductsDiv.forEach((product, index) => {

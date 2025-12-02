@@ -251,7 +251,7 @@ async function updateVoucher() {
       endDate: endDate
     })
   })
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
+  if (!response.ok) throw new Error('Updated Failed')
   const {error, message} = await response.json()
 
   if (error) {
@@ -298,6 +298,7 @@ async function createVoucher() {
       return pushNotification("Please fill in all information!")
     }
 
+    createSubmitBtn.classList.add('loading')
     const response = await fetch('/admin/all-vouchers/voucher/created', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -314,16 +315,18 @@ async function createVoucher() {
         endDate: endDate
       })
     })
-    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    if (!response.ok) throw new Error('Created Failed')
     const {error, message} = await response.json()
-    if (error) return pushNotification(error)
+    if (error) throw new Error(error)
     
     pushNotification(message)
     createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
     await getVouchers(sortOptions, filterOptions, currentPage.page, 10)
   } catch (error) {
     console.error('Error creating voucher:', error)
-    pushNotification("An error occurred.")
+    pushNotification("Voucher creation failed")
+    createSubmitBtn.classList.remove('loading')
   }
 }
 

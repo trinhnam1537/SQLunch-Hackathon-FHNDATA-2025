@@ -215,45 +215,50 @@ async function openEmployeeDetail(id) {
 }
 
 async function updateEmployee() {
-  if (!currentEmployee) return
-
-  const name    = detailModal.querySelector('#name').value.trim()
-  const role    = detailModal.querySelector('#role').value
-  const phone   = detailModal.querySelector('#phone').value.trim()
-  const address = detailModal.querySelector('#address').value.trim()
-  const gender  = detailModal.querySelector('input[name="gender"]:checked')?.value
-  const dob     = detailModal.querySelector('#dob').value || null
-
-  // Check if anything changed
-  if (
-    name    === currentEmployee.name &&
-    role    === currentEmployee.role &&
-    phone   === currentEmployee.phone &&
-    address === currentEmployee.address &&
-    gender  === currentEmployee.gender &&
-    dob     === currentEmployee.dob
-  ) {
-    return pushNotification('No changes detected')
+  try {
+    if (!currentEmployee) return
+  
+    const name    = detailModal.querySelector('#name').value.trim()
+    const role    = detailModal.querySelector('#role').value
+    const phone   = detailModal.querySelector('#phone').value.trim()
+    const address = detailModal.querySelector('#address').value.trim()
+    const gender  = detailModal.querySelector('input[name="gender"]:checked')?.value
+    const dob     = detailModal.querySelector('#dob').value || null
+  
+    // Check if anything changed
+    if (
+      name    === currentEmployee.name &&
+      role    === currentEmployee.role &&
+      phone   === currentEmployee.phone &&
+      address === currentEmployee.address &&
+      gender  === currentEmployee.gender &&
+      dob     === currentEmployee.dob
+    ) {
+      return pushNotification('No changes detected')
+    }
+  
+    updateBtn.classList.add('loading')
+    const res = await fetch('/admin/all-employees/employee/updated', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: currentEmployee._id, name, role, phone, address, gender, dob })
+    })
+  
+    if (!res.ok) throw new Error('Updated Failed')
+  
+    const { error, message } = await res.json()
+    if (error) throw new Error(error)
+  
+    pushNotification(message)
+    detailModal.classList.remove('show')
+    updateBtn.classList.remove('loading')
+    await getEmployees(sortOptions, filterOptions, currentPage.page, 10)
+    
+  } catch (error) {
+    console.error('Error updating employee:', error)
+    pushNotification("Employee update failed")
+    updateBtn.classList.remove('loading')
   }
-
-  updateBtn.classList.add('loading')
-
-  const res = await fetch('/admin/all-employees/employee/updated', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: currentEmployee._id, name, role, phone, address, gender, dob })
-  })
-
-  updateBtn.classList.remove('loading')
-
-  if (!res.ok) return pushNotification('Update failed')
-
-  const { error, message } = await res.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  detailModal.classList.remove('show')
-  await getEmployees(sortOptions, filterOptions, currentPage.page, 10)
 }
 
 updateBtn.onclick = updateEmployee
@@ -269,35 +274,40 @@ createCloseBtn.onclick = () => createModal.classList.remove('show')
 createModal.onclick = e => { if (e.target === createModal) createModal.classList.remove('show') }
 
 async function createEmployee() {
-  const role            = createModal.querySelector('select[name="role"]')?.value
-  const name            = createModal.querySelector('#name')?.value.trim()
-  const email           = createModal.querySelector('#email')?.value.trim()
-  const phone           = createModal.querySelector('#phone')?.value.trim()
-  const address         = createModal.querySelector('#address')?.value.trim()
-  const password        = createModal.querySelector('#password')?.value
-  const confirmPassword = createModal.querySelector('#password-confirm')?.value
-
-  if (password !== confirmPassword) {
-    return pushNotification('Passwords do not match!')
+  try {
+    const role            = createModal.querySelector('select[name="role"]')?.value
+    const name            = createModal.querySelector('#name')?.value.trim()
+    const email           = createModal.querySelector('#email')?.value.trim()
+    const phone           = createModal.querySelector('#phone')?.value.trim()
+    const address         = createModal.querySelector('#address')?.value.trim()
+    const password        = createModal.querySelector('#password')?.value
+    const confirmPassword = createModal.querySelector('#password-confirm')?.value
+  
+    if (password !== confirmPassword) return pushNotification('Passwords do not match!')
+  
+    if (!role || !name || !email || !phone || !address || !password) return pushNotification('Please fill in all required fields!')
+  
+    createSubmitBtn.classList.add('loading')
+    const res = await fetch('/admin/all-employees/employee/created', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, name, email, phone, address, password })
+    })
+  
+    if (!res.ok) throw new Error('Created Failed')
+    const { error, message } = await res.json()
+    if (error) throw new Error(error)
+  
+    pushNotification(message)
+    createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
+    await getEmployees(sortOptions, filterOptions, currentPage.page, 10)
+    
+  } catch (error) {
+    console.error('Error creating employee:', error)
+    pushNotification("Employee creation failed")
+    createSubmitBtn.classList.remove('loading')
   }
-
-  if (!role || !name || !email || !phone || !address || !password) {
-    return pushNotification('Please fill in all required fields!')
-  }
-
-  const res = await fetch('/admin/all-employees/employee/created', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role, name, email, phone, address, password })
-  })
-
-  if (!res.ok) throw new Error(`Status: ${res.status}`)
-  const { error, message } = await res.json()
-  if (error) return pushNotification(error)
-
-  pushNotification(message)
-  createModal.classList.remove('show')
-  await getEmployees(sortOptions, filterOptions, currentPage.page, 10)
 }
 
 createSubmitBtn.onclick = createEmployee
