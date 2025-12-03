@@ -13,6 +13,7 @@ const { producer } = require("../../kafka/producer");
 const { EventHubProducerClient } = require("@azure/event-hubs");
 
 const eventHubProducer = new EventHubProducerClient(process.env.EVENTHUB_CONNECTION);
+const sessionState = new Map();
 ///fabric
 
 
@@ -194,40 +195,78 @@ class homeController {
 
 
   async streamingFabric(req, res, next) {
-  try {
-    const { value } = req.body;
+    try {
+      const { value } = req.body;
 
-    // Resolve user ID (just like original)
-    const uid = req.cookies.uid || value.userId;
+      const uid = req.cookies.uid || value.userId;
 
-    const enhancedValue = {
-      ...value,
-      userId: uid
-    };
+      const enhancedValue = {
+        ...value,
+        userId: uid
+      };
 
-    // Create a batch
-    const batch = await eventHubProducer.createBatch();
+      const sessionId = enhancedValue.sessionId;
+      const eventType = enhancedValue.type;
 
-    const eventBody = {
-      ...enhancedValue,
-      _producerTimestamp: Date.now(), // optional but useful
-    };
+      // -----------------------------------------
+      // 🧠 SESSION VALIDATION LOGIC (same as Kafka consumer)
+      // -----------------------------------------
+      if (!sessionId) {
+        // No session → ignore silently
+        return res.json({ success: true });
+      }
 
-    batch.tryAdd({
-      body: eventBody,
-      partitionKey: uid
-    });
+      let state = sessionState.get(sessionId);
 
-    // Send batch
-    await eventHubProducer.sendBatch(batch);
+      // Case 1: First time seeing this session
+      if (!state) {
+        if (eventType !== "page_view") {
+          // Ignore invalid start
+          return res.json({ success: true });
+        }
 
-    return res.json({ success: true });
+        // Valid session start
+        state = { started: true, closed: false };
+        sessionState.set(sessionId, state);
+      }
 
-  } catch (error) {
-    console.error("EventHub error:", error);
-    return res.status(500).json({ error: error.message });
+      // Case 2: If session is closed → ignore anything after page_exit
+      if (state.closed) {
+        return res.json({ success: true });
+      }
+
+      // Case 3: page_exit closes the session
+      if (eventType === "page_exit") {
+        state.closed = true;
+        sessionState.set(sessionId, state);
+      }
+
+      // -----------------------------------------
+      // 📤 SEND TO EVENTHUB (only valid events)
+      // -----------------------------------------
+      const batch = await eventHubProducer.createBatch();
+
+      const eventBody = {
+        ...enhancedValue,
+        action: enhancedValue.action ?? null,   // 👈 force null
+        _producerTimestamp: Date.now()
+      };
+
+      batch.tryAdd({
+        body: eventBody,
+        partitionKey: uid
+      });
+
+      await eventHubProducer.sendBatch(batch);
+
+      return res.json({ success: true });
+
+    } catch (error) {
+      console.error("EventHub error:", error);
+      return res.status(500).json({ error: error.message });
+    }
   }
-}
+
 
   async testCDC(req, res, next) {
     try {
