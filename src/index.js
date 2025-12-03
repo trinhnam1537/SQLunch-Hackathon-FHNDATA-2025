@@ -25,18 +25,18 @@ const { setTopSellingProducts } = require('./app/controllers/cron/setTopSellingP
 const { setNewArrivalProducts } = require('./app/controllers/cron/setNewArrivalProducts')
 
 // ⭐ ADD THIS
-const { initProducer } = require('./app/kafka/producer.js');
+// const { initProducer } = require('./app/kafka/producer.js');
 
-db.connect();
+// db.connect();
 
-// ⭐ ADD THIS — connects once on server startup
-initProducer();
-console.log("Starting kafka producer...");
+// // ⭐ ADD THIS — connects once on server startup
+// initProducer();
+// console.log("Starting kafka producer...");
 
-setTimeout(() => {
-    console.log("This prints after 5 seconds");
-    // Put the code you want to run later HERE
-}, 5000);
+// setTimeout(() => {
+//     console.log("This prints after 5 seconds");
+//     // Put the code you want to run later HERE
+// }, 5000);
 
 
 // const { startAllConsumers } = require('./app/kafka/RunAllConsumers');

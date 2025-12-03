@@ -1016,74 +1016,59 @@ function updateActiveUsersChart() {
   const canvas = document.getElementById("customer-online");
   Chart.getChart(canvas)?.destroy();
 
-  new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: timestamps,
-      datasets: [{
-        label: "Active Users",
-        data: values,
-        borderColor: "#4CAF50",
-        backgroundColor: "rgba(76,175,80,0.1)",
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointRadius: 0,           // NO DOTS
-        pointHoverRadius: 4,      // Small hover dot
-        pointBackgroundColor: "#4CAF50"
-      }]
+new Chart(canvas, {
+  type: "line",
+  data: {
+    datasets: [{
+      label: "Active Users",
+      data: arr.map(item => ({
+        x: item.ts,    // REAL timestamp
+        y: item.value  // Active user count
+      })),
+      borderColor: "#4CAF50",
+      backgroundColor: "rgba(76,175,80,0.1)",
+      borderWidth: 2,
+      tension: 0.4,
+      fill: true,
+      pointRadius: 0,
+      pointHoverRadius: 4
+    }]
+  },
+
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    scales: {
+      x: {
+        type: "time",
+        time: {
+          unit: "hour",
+          stepSize: 1,
+          displayFormats: {
+            hour: "HH:mm"
+          }
+        },
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 10   // fewer timestamps shown
+        }
+      },
+
+      y: {
+        beginAtZero: true,
+        grace: 0.1
+      }
     },
 
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      },
-
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: "hour",
-            stepSize: 1,
-            displayFormats: {
-              hour: "HH:mm"
-            }
-          },
-          ticks: {
-            maxRotation: 0,
-            autoSkip: true,
-            maxTicksLimit: 12  // Show ~12 labels max
-          },
-          grid: {
-            display: true,
-            drawBorder: true
-          }
-        },
-
-        y: {
-          beginAtZero: true,
-          grace: 0.1,
-          title: {
-            display: true,
-            text: 'Active Users'
-          }
-        }
-      },
-
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        },
-        filler: {
-          propagate: true
-        }
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
       }
     }
-  });
+  }
+});
 }
 
 // ===============================

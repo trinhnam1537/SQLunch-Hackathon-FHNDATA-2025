@@ -43,10 +43,12 @@ async function publishEvents() {
   console.log("Done.");
 }
  
-// Run
-publishEvents().catch((err) => {
-  console.error("Error sending events:", err);
-});
+// Run only if connection string exists
+if (connectionString) {
+  publishEvents().catch((err) => {
+    console.error("Error sending events:", err);
+  });
+}
 
 const connect = async () => {
   try {

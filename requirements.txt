@@ -8,3 +8,7 @@ faiss-cpu
 numpy
 apscheduler
 sentence-transformers
+python-multipart
+azure-identity
+fastapi-cors
+pyodbc
