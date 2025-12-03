@@ -367,6 +367,7 @@ async function createPurchase() {
       return
     }
   
+    createSubmitBtn.classList.add('loading')
     const response = await fetch('/admin/all-purchases/purchase/created', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -382,15 +383,18 @@ async function createPurchase() {
         totalPurchasePrice: totalPurchasePrice.value
       })
     })
-    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    if (!response.ok) throw new Error('Created Failed')
     const {error, message} = await response.json()
     if (error) return pushNotification(error)
+
     pushNotification(message)
+    createModal.classList.remove('show')
+    createSubmitBtn.classList.remove('loading')
   
-    setTimeout(() => window.location.reload(), 2000)
+    await getPurchases(sortOptions, filterOptions, currentPage.page, 10)
   } catch (error) {
-    console.error('Error creating customer:', error)
-    pushNotification("Đã có lỗi xảy ra.")
+    console.error('Error creating purchase:', error)
+    pushNotification("Purchase creation failed")
   }
 }
 

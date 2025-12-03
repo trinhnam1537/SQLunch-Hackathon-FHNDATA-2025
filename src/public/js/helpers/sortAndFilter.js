@@ -58,7 +58,7 @@ async function sortAndFilter(getDataFunction, sortOptions, filterOptions, curren
     searchInput.value = ''
     clearButton.style.display = 'none'
     sortOptions = {}
-    filterOptions = {}
+    filterOptions = { deletedAt: null }
     currentPage = 1
     const itemsPerPage = document.querySelector('select#pagination').value
     getDataFunction(sortOptions, filterOptions, currentPage, itemsPerPage)

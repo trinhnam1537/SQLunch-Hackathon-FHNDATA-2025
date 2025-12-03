@@ -371,7 +371,6 @@ span.pagination p {
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   transition: all 0.25s ease;
 }
@@ -386,6 +385,18 @@ span.pagination p.current {
   border-color: var(--primary);
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(43, 99, 119, 0.25);
+}
+span.pagination p:not(.current):hover {
+  background: var(--muted);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+span.pagination p[style*="pointer-events: none"] {
+  background: transparent !important;
+  border: none !important;
+  color: var(--muted-foreground);
+  transform: none !important;
 }
 
 /* ---------- Animations ---------- */

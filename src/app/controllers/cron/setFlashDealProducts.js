@@ -24,7 +24,7 @@ async function setFlashDealProducts() {
     // Step 2: Bulk update with 50% discount + status
     const bulkOps = productsToUpdate.map(p => ({
       updateOne: {
-        filter: { _id: p._id },
+        filter: { _id: p._id, group: { $in: ['low_low', 'low_high'] }},
         update: {
           $set: {
             isFlashDeal: true,

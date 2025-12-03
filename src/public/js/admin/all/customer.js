@@ -232,46 +232,49 @@ async function openCustomerDetail(customerId) {
 
 // UPDATE MODAL
 async function updateCustomer() {
-  const name    = detailModal.querySelector('input[name="name"]').value
-  const phone   = detailModal.querySelector('input[name="phone"]').value
-  const address = detailModal.querySelector('input[name="address"]').value
-  const dob     = detailModal.querySelector('input[name="dob"]')?.value || null
-  const gender  = detailModal.querySelector('input[name="gender"]:checked')?.value || ''
-
-  // Check if any field has changed
-  if (
-    name    === currentCustomerInfo.name    &&
-    phone   === currentCustomerInfo.phone   &&
-    address === currentCustomerInfo.address &&
-    gender  === currentCustomerInfo.gender  &&
-    dob     === currentCustomerInfo.dob
-  ) return pushNotification('Please update the information')
-
-  detailUpdateBtn.classList.add('loading')
-  const response = await fetch('/admin/all-customers/customer/updated', {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      id      : currentCustomerInfo._id,
-      name    : name,
-      phone   : phone,
-      address : address,
-      dob     : dob,
-      gender  : gender
+  try {
+    const name    = detailModal.querySelector('input[name="name"]').value
+    const phone   = detailModal.querySelector('input[name="phone"]').value
+    const address = detailModal.querySelector('input[name="address"]').value
+    const dob     = detailModal.querySelector('input[name="dob"]')?.value || null
+    const gender  = detailModal.querySelector('input[name="gender"]:checked')?.value || ''
+  
+    // Check if any field has changed
+    if (
+      name    === currentCustomerInfo.name    &&
+      phone   === currentCustomerInfo.phone   &&
+      address === currentCustomerInfo.address &&
+      gender  === currentCustomerInfo.gender  &&
+      dob     === currentCustomerInfo.dob
+    ) return pushNotification('Please update the information')
+  
+    detailUpdateBtn.classList.add('loading')
+    const response = await fetch('/admin/all-customers/customer/updated', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        id      : currentCustomerInfo._id,
+        name    : name,
+        phone   : phone,
+        address : address,
+        dob     : dob,
+        gender  : gender
+      })
     })
-  })
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const {error, message} = await response.json()
-
-  if (error) {
+    if (!response.ok) throw new Error('Updated Failed')
+    const {error, message} = await response.json()
+    if (error) throw new Error(error)
+  
+    pushNotification(message)
+    detailModal.classList.remove('show')
     detailUpdateBtn.classList.remove('loading')
-    return pushNotification(error)
-  }  
-
-  pushNotification(message)
-  detailUpdateBtn.classList.remove('loading')
-  detailModal.classList.remove('show')
-  await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
+    await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
+    
+  } catch (error) {
+    console.error('Error updating customer:', error)
+    pushNotification("Customer update failed")
+    detailUpdateBtn.classList.remove('loading')
+  }
 }
 
 detailUpdateBtn.onclick = function() {
@@ -325,7 +328,7 @@ async function createCustomer() {
         password: password,
       })
     })
-    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    if (!response.ok) throw new Error('Created Failed')
     const {error, message} = await response.json()
     if (error) throw new Error(error)
 
@@ -335,7 +338,7 @@ async function createCustomer() {
     await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
   } catch (error) {
     console.error('Error creating customer:', error)
-    pushNotification("An error occurred.")
+    pushNotification("Customer creation failed")
     createSubmitBtn.classList.remove('loading')
   }
 }
@@ -460,10 +463,13 @@ async function openOrderDetail(orderId) {
 
 // === HOẶC TỐT HƠN: Dùng event delegation (chỉ cần thêm 1 lần) ===
 detailModal.querySelector('table#table-2 tbody').addEventListener('click', e => {
-  if (e.target.classList.contains('view-order-btn')) {
-    const orderId = e.target.dataset.id
+  detailModal.querySelector('table#table-2 tbody').addEventListener('click', e => {
+    const btn = e.target.closest('.view-order-btn')
+    if (!btn) return
+
+    const orderId = btn.dataset.id
     openOrderDetail(orderId)
-  }
+  })
 })
 
 window.addEventListener('DOMContentLoaded', async function loadData() {
@@ -472,7 +478,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     await getFilter()
     await getCustomers(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getCustomers, sortOptions, filterOptions, currentPage.page)
-    await exportJs('CUSTOMERS REPORT')
+    await exportJs('CUSTOMER LIST REPORT')
   } catch (error) {
     console.error('Error loading data:', error)
     pushNotification(error)

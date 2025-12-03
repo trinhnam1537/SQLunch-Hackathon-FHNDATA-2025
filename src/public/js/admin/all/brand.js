@@ -144,11 +144,25 @@ const detailModal       = document.querySelector('#detail-modal')
 const detailCloseBtn    = detailModal.querySelector('.close-modal')
 const detailUpdateBtn   = detailModal.querySelector('button[type="submit"]')
 let currentBrandInfo    = null
+let imgPath             = { path: '' }
 
 detailCloseBtn.onclick = () => detailModal.classList.remove('show')
 detailModal.onclick = e => {
   if (e.target === detailModal) detailModal.classList.remove('show')
 }
+
+// Xử lý ảnh khi thay đổi
+detailModal.querySelector('input#img')?.addEventListener('change', function () {
+  const file = this.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      imgPath.path = reader.result
+      detailModal.querySelector('img#image').src = reader.result
+    }
+    reader.readAsDataURL(file)
+  }
+})
 
 async function openBrandDetail(brandId) {
   try {
@@ -173,6 +187,7 @@ async function openBrandDetail(brandId) {
     detailModal.querySelector('input[name="name"]').value = brandInfo.name || ''
     detailModal.querySelector('input[name="totalProduct"]').value = brandInfo.totalProduct || 0
     detailModal.querySelector('input[name="totalRevenue"]').value = formatNumber(brandInfo.totalRevenue) || ''
+    detailModal.querySelector('img#image').src = brandInfo.img?.path || '/images/default-product.png'
 
     // Lưu để so sánh khi cập nhật
     currentBrandInfo = {
@@ -188,32 +203,63 @@ async function openBrandDetail(brandId) {
 }
 
 async function updateBrand() {
-  const name = detailModal.querySelector('input[name="name"]').value.trim()
+  try {
+    if (!currentBrandInfo) return;
 
-  if (name === currentBrandInfo.name) {
-    return pushNotification('Please update the information')
-  }
+    const nameInput = detailModal.querySelector('input[name="name"]');
+    const name = nameInput.value.trim();
 
-  detailUpdateBtn.classList.add('loading')
+    // Check if anything actually changed
+    const hasNameChanged = name !== currentBrandInfo.name;
+    const hasImageChanged = !!imgPath.path; // new image selected
 
-  const response = await fetch('/admin/all-brands/brand/updated', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    if (!hasNameChanged && !hasImageChanged) {
+      return pushNotification('Please update the brand name or logo', 'warning');
+    }
+
+    if (!name) {
+      return pushNotification('Brand name is required!', 'error');
+    }
+
+    // Build payload
+    const payload = {
       id: currentBrandInfo._id,
-      name: name
-    })
-  })
+      name: name,
+      oldImageId: currentBrandInfo.img?.filename || null  // for deleting old logo
+    };
 
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const { error, message } = await response.json()
+    // Only send new image if user uploaded one
+    if (imgPath.path) {
+      payload.img = imgPath.path; // base64 data URL
+    }
 
-  detailUpdateBtn.classList.remove('loading')
-  if (error) return pushNotification(error)
+    detailUpdateBtn.classList.add('loading');
 
-  pushNotification(message)
-  detailModal.classList.remove('show')
-  await getBrands(sortOptions, filterOptions, currentPage.page, 10)
+    const response = await fetch('/admin/all-brands/brand/updated', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Update failed');
+    }
+
+    pushNotification(data.message || 'Brand updated successfully!', 'success');
+
+    // Reset UI
+    detailModal.classList.remove('show');
+    imgPath.path = ''; // clear preview
+    await getBrands(sortOptions, filterOptions, currentPage.page, 10);
+
+  } catch (error) {
+    console.error('Error updating brand:', error);
+    pushNotification(error.message || 'Failed to update brand', 'error');
+  } finally {
+    detailUpdateBtn.classList.remove('loading');
+  }
 }
 
 detailUpdateBtn.onclick = () => updateBrand()
@@ -223,6 +269,7 @@ const createModal     = document.querySelector('#create-modal')
 const createBtn       = document.querySelector('.create-btn')
 const createCloseBtn  = createModal.querySelector('.close-modal')
 const createSubmitBtn = createModal.querySelector('button[type="submit"]')
+let createImgPath     = { path: '' }
 
 createBtn.onclick = () => createModal.classList.add('show')
 createCloseBtn.onclick = () => createModal.classList.remove('show')
@@ -230,27 +277,69 @@ createModal.onclick = e => {
   if (e.target === createModal) createModal.classList.remove('show')
 }
 
-async function createBrand() {
-  const name = createModal.querySelector('input#name').value.trim()
-
-  if (!name) {
-    return pushNotification('Please enter brand name!')
+createModal?.querySelector('input#img')?.addEventListener('change', function () {
+  const file = this.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => createImgPath.path = reader.result
+    reader.readAsDataURL(file)
   }
+})
 
-  const response = await fetch('/admin/all-brands/brand/created', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name })
-  })
+async function createBrand() {
+  try {
+    const nameInput = createModal.querySelector('input#name')
+    const name = nameInput.value.trim();
 
-  if (!response.ok) throw new Error(`Response status: ${response.status}`)
-  const { error, message } = await response.json()
+    if (!name) {
+      return pushNotification('Please enter brand name!', 'error');
+    }
 
-  if (error) return pushNotification(error)
+    // Optional: warn if no logo but still allow creation
+    // if (!createImgPath.path) {
+    //   return pushNotification('Please upload a brand logo!', 'warning');
+    // }
 
-  pushNotification(message)
-  createModal.classList.remove('show')
-  await getBrands(sortOptions, filterOptions, currentPage.page, 10)
+    createSubmitBtn.classList.add('loading');
+
+    const payload = {
+      name: name
+    };
+
+    // Only send image if user selected one
+    if (createImgPath.path) {
+      payload.img = createImgPath.path; // base64 data URL
+    }
+
+    const response = await fetch('/admin/all-brands/brand/created', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Creation failed');
+    }
+
+    pushNotification(data.message || 'Brand created successfully!', 'success');
+
+    // Reset form
+    createModal.classList.remove('show');
+    nameInput.value = '';
+    createImgPath.path = ''; // clear preview
+    createSubmitBtn.classList.remove('loading');
+
+    // Refresh list
+    await getBrands(sortOptions, filterOptions, currentPage.page, 10);
+
+  } catch (error) {
+    console.error('Error creating brand:', error);
+    pushNotification(error.message || 'Failed to create brand', 'error');
+  } finally {
+    createSubmitBtn.classList.remove('loading');
+  }
 }
 
 createSubmitBtn.onclick = () => createBrand()
@@ -261,7 +350,7 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
     generateColumns()
     await getBrands(sortOptions, filterOptions, currentPage.page, 10)
     await sortAndFilter(getBrands, sortOptions, filterOptions, currentPage.page)
-    await exportJs('BÁO CÁO DANH SÁCH THƯƠNG HIỆU')
+    await exportJs('BRAND LIST REPORT')
   } catch (err) {
     console.error('Error loading data:', err)
     pushNotification('An error occurred while loading data')
