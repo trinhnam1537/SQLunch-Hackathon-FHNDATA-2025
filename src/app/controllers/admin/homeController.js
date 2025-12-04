@@ -11,6 +11,23 @@ const notification = require('../../models/notificationModel')
 const orderStatus = require('../../models/orderStatusModel')
 const member = require('../../models/memberModel')
 const position = require('../../models/positionModel')
+const { clickhouse } = require('../../kafka/ClickhouseConection');
+const { activeSessions } = require('../../kafka/RawIngestConsumer');
+
+const redis = require("redis");
+
+// const redisClient = redis.createClient({
+//   url: "redis://localhost:6379"
+// });
+
+// redisClient.connect().then(() => {
+//   console.log("Connected to Redis.");
+// }).catch(err => {
+//   console.error("Redis connection error:", err);
+// });
+const { spawn } = require("child_process");
+const path = require("path");
+
 
 class homeController {
   async show(req, res, next) {
@@ -305,5 +322,214 @@ class homeController {
       return res.json({error: error.message})
     }
   }
+
+
+  // async getActiveUsersRealtime(req, res) {
+  //   try {
+  //     // Query ClickHouse via the shared client
+  //     const sql = `
+  //       SELECT count(sessionId) AS active
+  //       FROM analytics.active_sessions FINAL
+  //       WHERE lastEventType <> 'page_exit'
+  //     `;
+
+  //     const result = await clickhouse.query({
+  //       query: sql,
+  //       format: 'JSONEachRow'
+  //     });
+
+  //     const rows = await result.json();
+
+  //     return res.json({
+  //       current: rows.length > 0 ? rows[0].active : 0
+  //     });
+
+  //   } catch (error) {
+  //     console.error("ClickHouse realtime error:", error);
+  //     return res.json({ error: error.message });
+  //   }
+  // }
+
+// async getActiveUsersRealtime(req, res) {
+//   try {
+//     let cursor = "0";
+//     let total = 0;
+
+//     do {
+//       const reply = await redisClient.scan(cursor, {
+//         MATCH: "active:*",
+//         COUNT: 500
+//       });
+
+//       cursor = reply.cursor;
+//       total += reply.keys.length;
+
+//     } while (cursor !== "0");
+
+//     return res.json({ 
+//       current: total,
+//       timestamp: Date.now()  // ✅ Add timestamp
+//     });
+
+//   } catch (error) {
+//     console.error("Redis realtime error:", error);
+//     return res.json({ 
+//       current: 0,
+//       timestamp: Date.now()  // ✅ Even on error, include timestamp
+//     });
+//   }
+// }
+
+
+async getActiveUsersRealtime(req, res) {
+  try {
+    // Count directly from shared in-memory map
+    const total = activeSessions.size;
+
+    return res.json({
+      current: total,
+      timestamp: Date.now()  // same format as before
+    });
+
+  } catch (error) {
+    console.error("ActiveRealtime error:", error);
+
+    return res.json({
+      current: 0,
+      timestamp: Date.now()
+    });
+  }
+}
+
+
+
+  async  getSessionKPIs(req, res) {
+    try {
+      const { startDate, endDate } = req.body;
+
+      if (!startDate || !endDate) {
+        return res.json({ error: "startDate and endDate required" });
+      }
+
+      const pythonPath = path.join(__dirname, "query_warehouse.py");
+
+      console.log("🔥 Spawning Python:", pythonPath, startDate, endDate);
+
+      const python = spawn("python", [pythonPath, startDate, endDate]);
+
+      let output = "";
+      let errorOutput = "";
+
+      python.stdout.on("data", (data) => {
+        output += data.toString();
+      });
+
+      python.stderr.on("data", (data) => {
+        errorOutput += data.toString();
+      });
+
+      python.on("close", (code) => {
+        if (code !== 0) {
+          return res.json({
+            error: "Python failed",
+            details: errorOutput,
+          });
+        }
+
+        try {
+          const result = JSON.parse(output);
+
+          return res.json({
+            success: true,
+            data: {
+              longSessionRatio: Number(result.longSessionRatio).toFixed(2),
+              comebackRate: Number(result.comebackRate).toFixed(2),
+            },
+          });
+        } catch (err) {
+          return res.json({
+            error: "JSON parse error",
+            details: err.message,
+          });
+        }
+      });
+    } catch (err) {
+      return res.json({ error: err.message });
+    }
+  }
+
+// async getSessionKPIs(req, res, next) {
+//   try {
+//     console.log("🔍 getSessionKPIs called");
+//     const { startDate, endDate } = req.body
+//     console.log("📅 Dates received:", { startDate, endDate });
+
+//     if (!startDate || !endDate) {
+//       console.log("❌ Missing dates");
+//       return res.json({
+//         error: 'startDate and endDate required'
+//       })
+//     }
+
+//     // Query 1: Sessions > 5 seconds ratio
+//     console.log("📊 Executing Query 1: Long Sessions");
+//     const longSessionsResult = await clickhouse.query({
+//       query: `
+//         SELECT 
+//           countIf(dwellSeconds > 5) as longSessions,
+//           count() as totalSessions,
+//           (countIf(dwellSeconds > 5) / count()) * 100 as ratio
+//         FROM analytics.sessions
+//         WHERE startTime >= toDateTime('${startDate}') AND startTime <= toDateTime('${endDate}')
+//       `
+//     })
+
+//     const longSessionsData = await longSessionsResult.json()
+//     console.log("✅ Query 1 result:", JSON.stringify(longSessionsData, null, 2));
+    
+//     // Query 2: User comeback rate
+//     console.log("📊 Executing Query 2: Comeback Rate");
+//     const comebackResult = await clickhouse.query({
+//       query: `
+//         SELECT 
+//           uniqIf(visitorId, sessionCount >= 2) as returningUsers,
+//           uniq(visitorId) as totalUsers,
+//           (uniqIf(visitorId, sessionCount >= 2) / uniq(visitorId)) * 100 as comebackRate
+//         FROM (
+//           SELECT 
+//             visitorId,
+//             count() as sessionCount
+//           FROM analytics.sessions
+//           WHERE startTime >= toDateTime('${startDate}') AND startTime <= toDateTime('${endDate}')
+//           GROUP BY visitorId
+//         )
+//       `
+//     })
+
+//     const comebackData = await comebackResult.json()
+//     console.log("✅ Query 2 result:", JSON.stringify(comebackData, null, 2));
+
+//     const longSessionRatio = longSessionsData.data[0]?.ratio || 0
+//     const comeback = comebackData.data[0]?.comebackRate || 0
+    
+//     console.log("📈 Final values:", { longSessionRatio, comeback });
+
+//     const response = {
+//       success: true,
+//       data: {
+//         longSessionRatio: Number(longSessionRatio).toFixed(2),
+//         comebackRate: Number(comeback).toFixed(2)
+//       }
+//     };
+    
+//     console.log("📤 Sending response:", JSON.stringify(response, null, 2));
+//     return res.json(response)
+//   } catch (error) {
+//     console.error('❌ Error fetching session KPIs:', error)
+//     return res.json({ error: error.message })
+//   }
+// }
+
+
 }
 module.exports = new homeController

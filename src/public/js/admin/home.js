@@ -554,6 +554,27 @@ async function getOrderAnalytics() {
   }
 }
 
+
+async function getSessionKPIs(fetchBody) {
+  try {
+    const response = await fetch('/api/analytics/session-kpis', fetchBody)
+    if (!response.ok) throw new Error(`Response status: ${response.status}`)
+    
+    const { success, data } = await response.json()
+    
+    if (success) {
+      document.getElementById('home-long-sessions-ratio').textContent = 
+        `${data.longSessionRatio}%`
+      document.getElementById('home-comeback-rate').textContent = 
+        `${data.comebackRate}%`
+    }
+  } catch (error) {
+    console.error('Error loading session KPIs:', error)
+    document.getElementById('home-long-sessions-ratio').textContent = 'Error'
+    document.getElementById('home-comeback-rate').textContent = 'Error'
+  }
+}
+
 function renderPaymentMethods(elementId, items) {
   const container = document.getElementById(elementId)
   if (!items || items.length === 0) {
@@ -798,6 +819,17 @@ async function getAll() {
 
     // Only load finance data on initial page load
     await getFinance(fetchBody)
+    await getOrders(fetchBody)
+    await getOrderAnalytics()
+    await getSessionKPIs(fetchBody)
+    await getCustomers(fetchBody)
+    await getEmployees(fetchBody)
+    await getProducts()
+    await getProductAnalytics()
+    // await getStores()
+    // await getSuppliers()
+    // await getPurchases(fetchBody)
+    // await getBrands()
   } catch (error) {
     console.error('An error occurred:', error)
     pushNotification('An error occurred')
@@ -824,6 +856,12 @@ document.querySelector('button[type="submit"]').addEventListener('click', async 
       endDate: endDate
     })
   }
+  await getFinance(fetchBody)
+  await getOrders(fetchBody)
+  await getSessionKPIs(fetchBody)
+  await getCustomers(fetchBody)
+  await getEmployees(fetchBody)
+  // await getPurchases(fetchBody)
 
   // Reload data for the currently active dashboard
   await loadDashboardData(activeDashboard)
@@ -833,3 +871,206 @@ window.addEventListener('DOMContentLoaded', async function loadData() {
   initDashboardNavigator()
   await getAll()
 })
+
+
+
+// ===============================================
+// ACTIVE USERS REAL-TIME TRACKING
+// ===============================================
+
+// let activeUsersHistory = [];
+// let activeUsersChart = null;
+
+// async function getActiveUsers() {
+//   try {
+//     const response = await fetch('/admin/all/data/active-users');
+//     const { current } = await response.json();
+
+//     const now = new Date();
+
+//     activeUsersHistory.push({
+//       timestamp: now,
+//       count: current
+//     });
+
+//     // Keep last 24 hours
+//     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+//     activeUsersHistory = activeUsersHistory.filter(x => x.timestamp > cutoff);
+
+//     updateActiveUsersChart();
+
+//   } catch (err) {
+//     console.error("Error getting active users:", err);
+//   }
+// }
+
+// function updateActiveUsersChart() {
+//   const labels = activeUsersHistory.map(p => p.timestamp.toLocaleTimeString());
+//   const data = activeUsersHistory.map(p => p.count);
+
+//   // if (activeUsersChart) activeUsersChart.destroy();
+
+//   const activeUsersChart = document.getElementById("customer-online")
+//   Chart.getChart(activeUsersChart)?.destroy()
+//   new Chart(activeUsersChart, {
+//     type: 'line',
+//     data: {
+//       labels,
+//       datasets: [{
+//         label: "Active Users",
+//         data,
+//         borderColor: '#4CAF50',
+//         backgroundColor: 'rgba(76,175,80,0.2)',
+//         borderWidth: 2,
+//         tension: 0.3,
+//         fill: true
+//       }]
+//     },
+//     options: {
+//       responsive: true,
+//       maintainAspectRatio: false
+//     }
+//   })
+// }
+
+// // Update every 3 seconds
+// setInterval(() => {
+//   getActiveUsers();
+// }, 3000);
+
+// // Initial startup
+// window.addEventListener('DOMContentLoaded', () => {
+//   getActiveUsers();
+// });
+
+
+const WINDOW_SIZE = 28800;   // 24h window @ 3s interval
+const SAMPLE_INTERVAL = 3000;
+
+// ===============================
+// Circular Buffer (stores {value, ts})
+// ===============================
+class CircularBuffer {
+  constructor(size) {
+    this.size = size;
+    this.buf = new Array(size).fill(null);
+    this.idx = 0;
+    this.full = false;
+  }
+
+  add(value, customTs = Date.now()) {  // ✅ Accept optional timestamp
+    this.buf[this.idx] = {
+      value,
+      ts: customTs  // ✅ Use provided timestamp or default to now
+    };
+    this.idx = (this.idx + 1) % this.size;
+    if (this.idx === 0) this.full = true;
+  }
+
+  toArray() {
+    if (!this.full) return this.buf.slice(0, this.idx);
+    return [
+      ...this.buf.slice(this.idx),
+      ...this.buf.slice(0, this.idx)
+    ];
+  }
+}
+
+const windowBuf = new CircularBuffer(WINDOW_SIZE);
+
+// ===============================
+// Fetch active users from backend
+// ===============================
+async function getActiveUsers() {
+  try {
+    const response = await fetch("/admin/all/data/active-users");
+    const { current, timestamp } = await response.json();
+
+    windowBuf.add(current);  // This will use the timestamp we pass
+    updateActiveUsersChart();
+
+  } catch (err) {
+    console.error("Error getting active users:", err);
+  }
+}
+
+// ===============================
+// Render beautiful time-series chart
+// ===============================
+function updateActiveUsersChart() {
+  const arr = windowBuf.toArray().filter(x => x !== null);
+
+  const timestamps = arr.map(item => item.ts);
+  const values = arr.map(item => item.value);
+
+  // Create hour-based bins: show label every hour
+  const labels = timestamps.map((ts, idx) => {
+    const hour = Math.floor(idx / (3600000 / SAMPLE_INTERVAL)); // samples per hour
+    const date = new Date(ts);
+    if (idx === 0 || idx % Math.ceil(3600000 / SAMPLE_INTERVAL) === 0) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    return '';
+  });
+
+  const canvas = document.getElementById("customer-online");
+  Chart.getChart(canvas)?.destroy();
+
+new Chart(canvas, {
+  type: "line",
+  data: {
+    datasets: [{
+      label: "Active Users",
+      data: arr.map(item => ({
+        x: item.ts,    // REAL timestamp
+        y: item.value  // Active user count
+      })),
+      borderColor: "#4CAF50",
+      backgroundColor: "rgba(76,175,80,0.1)",
+      borderWidth: 2,
+      tension: 0.4,
+      fill: true,
+      pointRadius: 0,
+      pointHoverRadius: 4
+    }]
+  },
+
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    scales: {
+      x: {
+        type: "time",
+        time: {
+          unit: "hour",
+          stepSize: 1,
+          displayFormats: {
+            hour: "HH:mm"
+          }
+        },
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 10   // fewer timestamps shown
+        }
+      },
+
+      y: {
+        beginAtZero: true,
+        grace: 0.1
+      }
+    },
+
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      }
+    }
+  }
+});
+}
+
+// ===============================
+setInterval(getActiveUsers, SAMPLE_INTERVAL);
+window.addEventListener("DOMContentLoaded", getActiveUsers);
