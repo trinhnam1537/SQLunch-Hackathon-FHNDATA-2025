@@ -39,22 +39,40 @@ async function checkUser() {
     const logOutButton = document.createElement('a')
     logOutButton.innerText = 'Logout'
     logOutButton.setAttribute('href', '/log-out')
-    // logOutButton.onclick = async function() {
-    //   getLog(
-    //     topic = 'auth-update', 
-    //     value = {
-    //       "user_id"     : window.uid,
-    //       "update_type" : 'logout',
-    //       "timestamp"   : new Date(),
-    //     }
-    //   )
-    // }
+    // ✅ NEW: Fire page_exit when user signs out
+    logOutButton.onclick = async function(event) {
+      event.preventDefault();
+      
+      // Fire page_exit through tracking
+      if (window.firePageExit) {
+        window.firePageExit();
+      }
+      
+      // Navigate to sign-out
+      setTimeout(() => {
+        window.location.href = '/log-out';
+      }, 100);
+    }
     avatarMenu.appendChild(logOutButton)
   } 
   else {
     const logInButton = document.createElement('a')
     logInButton.innerText = 'Login'
     logInButton.setAttribute('href', '/authentication/sign-in')
+    // ✅ NEW: Fire page_exit when user signs in
+    logInButton.onclick = async function(event) {
+      event.preventDefault();
+      
+      // Fire page_exit through tracking
+      if (window.firePageExit) {
+        window.firePageExit();
+      }
+      
+      // Navigate to sign-in
+      setTimeout(() => {
+        window.location.href = '/authentication/sign-in';
+      }, 100);
+    }
     avatarMenu.appendChild(logInButton)
   }
 }

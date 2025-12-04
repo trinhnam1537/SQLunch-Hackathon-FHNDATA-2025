@@ -1,0 +1,511 @@
+// src/consumers/sessionConsumer.js
+const { Kafka } = require("kafkajs");
+const { createClient } = require("@clickhouse/client");
+const getRedis = require("../redis/redisClient");
+
+// -------------------------------------------------
+// CONFIG
+// -------------------------------------------------
+const KAFKA_BROKERS = ["localhost:9092", "localhost:9094", "localhost:9095"];
+const KAFKA_GROUP_ID = "session-processor";
+const TOPIC = "web-events";
+
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const SESSION_TTL_SEC = SESSION_TIMEOUT_MS / 1000;
+
+const ACTIVE_TYPES = new Set([
+  "heartbeat",
+  "action",
+  "visibility_change",
+  "page_view"
+]);
+
+// -------------------------------------------------
+// CLICKHOUSE
+// -------------------------------------------------
+const clickhouse = createClient({
+  host: "http://localhost:8123",
+  username: "default",
+  password: "",
+  database: "analytics"
+});
+
+// ClickHouse batching
+let chBuffer = [];
+let chLastFlush = Date.now();
+const CH_BATCH_SIZE = 500;
+const CH_FLUSH_INTERVAL = 1000;
+
+
+// -------------------------------------------------
+// SESSION VALIDATION STATE (your old logic)
+// -------------------------------------------------
+const sessionLifecycle = new Map(); // { started: bool, closed: bool }
+
+// -------------------------------------------------
+// SESSION STORE (unchanged end-session store)
+// -------------------------------------------------
+const sessions = new Map();
+
+const PRODUCT_REGEX = /all-products\/product\/[A-Za-z0-9\-]+$/;
+
+// -------------------------------------------------
+// HELPERS
+// -------------------------------------------------
+function toMs(ts) {
+  if (ts == null) return null;
+  if (typeof ts === "number") return ts;
+  const n = Number(ts);
+  if (!isNaN(n)) return n;
+  const d = new Date(ts).getTime();
+  return isNaN(d) ? null : d;
+}
+
+// -------------------------------------------------
+// CLICKHOUSE FLUSHER
+// -------------------------------------------------
+async function flushCH() {
+  if (chBuffer.length === 0) return;
+
+  const batch = chBuffer.splice(0, chBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "sessions",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ ClickHouse batch insert failed:", err);
+  }
+
+  chLastFlush = Date.now();
+}
+
+setInterval(flushCH, CH_FLUSH_INTERVAL);
+
+
+// -------------------------------------------------
+// CLICKHOUSE: ACTIVE SESSION COUNT TABLE
+// -------------------------------------------------
+let activeCountBuffer = [];
+const ACTIVE_COUNT_BATCH = 200;
+const ACTIVE_COUNT_FLUSH_MS = 2000;
+
+async function flushActiveCount() {
+  if (activeCountBuffer.length === 0) return;
+
+  const batch = activeCountBuffer.splice(0, activeCountBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "active_session_count",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ ClickHouse active_count insert failed:", err);
+    activeCountBuffer = [...batch, ...activeCountBuffer];
+  }
+}
+
+setInterval(flushActiveCount, ACTIVE_COUNT_FLUSH_MS);
+
+
+let fraudBuffer = [];
+const FRAUD_FLUSH_INTERVAL_MS = 1500;
+
+async function flushFraud() {
+  if (fraudBuffer.length === 0) return;
+
+  const batch = fraudBuffer.splice(0, fraudBuffer.length);
+
+  try {
+    await clickhouse.insert({
+      table: "fraud_sessions",
+      values: batch,
+      format: "JSONEachRow"
+    });
+  } catch (err) {
+    console.error("❌ Fraud insert failed:", err);
+    fraudBuffer = [...batch, ...fraudBuffer];
+  }
+}
+
+setInterval(flushFraud, FRAUD_FLUSH_INTERVAL_MS);
+
+
+// -------------------------------------------------
+// REDIS ACTIVE SESSION MATERIALIZER (optimized)
+// -------------------------------------------------
+async function updateRedisActiveSession(redis, event) {
+  const sid = event.sessionId;
+  const key = `active:${sid}`;
+
+  if (event.type === "page_exit") {
+    await redis.del(key);
+  } else {
+    await redis
+      .multi()
+      .hSet(key, {
+        sessionId: sid,
+        visitorId: event.userId,
+        lastEventTime: event.timestamp,
+        lastEventType: event.type,
+        url: event.url || ""
+      })
+      .expire(key, SESSION_TTL_SEC)
+      .exec();
+  }
+}
+
+
+
+// -------------------------------------------------
+// END SESSION → CLICKHOUSE (unchanged, but batched)
+// -------------------------------------------------
+function queueSessionFlush(session, endTimestampMs) {
+  const startMs = session.startTime;
+  const endMs = endTimestampMs || session.lastEventTime || Date.now();
+
+  let totalIdleMs = session.totalIdleMs || 0;
+  if (session.idleStart) {
+    totalIdleMs += Math.max(0, endMs - session.idleStart);
+  }
+
+  const dwellMs = Math.max(0, (endMs - startMs) - totalIdleMs);
+
+  let urlMostActive = "";
+  let maxActions = 0;
+  for (const [url, count] of Object.entries(session.urlActionCounts)) {
+    if (count > maxActions) {
+      maxActions = count;
+      urlMostActive = url;
+    }
+  }
+
+  chBuffer.push({
+    sessionId: session.sessionId,
+    visitorId: session.visitorId,
+    startTime: new Date(startMs).toISOString().slice(0, 19).replace("T", " "),
+    endTime: new Date(endMs).toISOString().slice(0, 19).replace("T", " "),
+    urlStart: session.urlStart || "",
+    urlEnd: session.urlEnd || "",
+    totalIdleSeconds: Math.floor(totalIdleMs / 1000),
+    dwellSeconds: Math.floor(dwellMs / 1000),
+    totalClicks: session.totalClicks || 0,
+    totalActions: session.totalActions || 0,
+    totalPageViews: session.totalPageViews || 0,
+    productViews: session.productViewSet.size,
+    urlMostActive
+  });
+
+  if (chBuffer.length >= CH_BATCH_SIZE) {
+    flushCH();
+  }
+}
+
+// -------------------------------------------------
+// EVENT HANDLER
+// -------------------------------------------------
+async function handleEvent(event, redis) {
+  let ts = toMs(event.timestamp);
+  if (ts == null) ts = Date.now();
+  event.timestamp = ts;
+
+  const sid = event.sessionId;
+  const uid = event.userId;
+  const url = event.url || "";
+
+  // -------------------------------------------------
+  // SESSION LIFECYCLE VALIDATION (your old logic)
+  // -------------------------------------------------
+  let lifecycle = sessionLifecycle.get(sid);
+
+  if (!lifecycle) {
+    if (event.type !== "page_view") return;
+    lifecycle = { started: true, closed: false };
+    sessionLifecycle.set(sid, lifecycle);
+  }
+
+  if (lifecycle.closed) return;
+
+  if (event.type === "page_exit") {
+    lifecycle.closed = true;
+    sessionLifecycle.set(sid, lifecycle);
+  }
+
+  // -------------------------------------------------
+  // REDIS ACTIVE SESSION MATERIALIZER
+  // -------------------------------------------------
+  await updateRedisActiveSession(redis, event);
+
+  // -------------------------------------------------
+  // END SESSION METRICS (unchanged)
+  // -------------------------------------------------
+  let s = sessions.get(sid);
+
+  // Create session on first page_view
+  if (!s && event.type === "page_view") {
+    s = {
+      sessionId: sid,
+      visitorId: uid,
+      startTime: ts,
+      lastEventTime: ts,
+      urlStart: url,
+      urlEnd: url,
+      idleStart: null,
+      totalIdleMs: 0,
+      totalClicks: 0,
+      totalActions: 0,
+      totalPageViews: 0,
+      urlActionCounts: {},
+      productViewSet: new Set(),
+
+      // FRAUD FIELDS
+      fraudRules: [],
+      lastEventTimestamps: [],
+      clickTimestamps: [],
+    };
+    sessions.set(sid, s);
+  }
+
+  // Ignore events for sessions never started
+  if (!s) return;
+
+  // UPDATE METRICS
+  s.lastEventTime = ts;
+
+
+
+  // ----------------------------------------
+// FRAUD REAL-TIME SIGNALS
+// ----------------------------------------
+
+// Track event rate
+s.lastEventTimestamps.push(ts);
+if (s.lastEventTimestamps.length > 50)
+    s.lastEventTimestamps.shift();
+
+// More than 10 events/sec → bot
+if (s.lastEventTimestamps.length > 10) {
+  const delta = ts - s.lastEventTimestamps[0];
+  if (delta < 1000) {
+    s.fraudRules.push("high_event_rate");
+  }
+}
+
+// Track click frequency
+if (event.type === "action" && event.action === "click") {
+  s.clickTimestamps.push(ts);
+  if (s.clickTimestamps.length > 20) s.clickTimestamps.shift();
+
+  // constant interval ~120ms = bot
+  if (s.clickTimestamps.length >= 5) {
+    const diffs = [];
+    for (let i = 1; i < s.clickTimestamps.length; i++) {
+      diffs.push(s.clickTimestamps[i] - s.clickTimestamps[i-1]);
+    }
+    const avg = diffs.reduce((a,b)=>a+b,0) / diffs.length;
+    const variance = diffs.reduce((a,b)=>a+Math.pow(b-avg,2), 0) / diffs.length;
+
+    if (avg < 200 && variance < 80) {
+      s.fraudRules.push("constant_click_interval");
+    }
+  }
+}
+
+// Only heartbeat events → bot farm
+if (s && event.type === "heartbeat" && /// old is: if (event.type === "heartbeat" && 
+    s.totalClicks === 0 &&
+    s.totalActions < 3 &&
+    s.totalPageViews <= 1) 
+{
+  s.fraudRules.push("heartbeat_only_session");
+}
+
+
+
+
+  const isProduct = PRODUCT_REGEX.test(url);
+
+  if (event.type === "page_view") {
+      s.totalPageViews++;
+      if (!s.urlStart) s.urlStart = url;
+      s.urlEnd = url;
+  }
+
+  if (event.type === "action") {
+    s.totalActions++;
+    if (event.action === "click") s.totalClicks++;
+    s.urlActionCounts[url] = (s.urlActionCounts[url] || 0) + 1;
+    s.urlEnd = url;
+  }
+
+  if (isProduct) s.productViewSet.add(url);
+
+  if (ACTIVE_TYPES.has(event.type)) {
+    if (s.idleStart) {
+      s.totalIdleMs += ts - s.idleStart;
+      s.idleStart = null;
+    }
+  }
+
+  if (event.type === "idle") {
+    if (!s.idleStart) s.idleStart = ts;
+  }
+
+  if (event.type === "page_exit") {
+
+      // finalize idle time
+      if (s.idleStart) {
+        s.totalIdleMs += ts - s.idleStart;
+        s.idleStart = null;
+      }
+
+      const sessionMinutes = (ts - s.startTime) / 60000;
+
+      // Fraud rules
+      if (s.totalPageViews / sessionMinutes > 20)
+          s.fraudRules.push("high_pageview_rate");
+
+      if (s.productViewSet.size / sessionMinutes > 50)
+          s.fraudRules.push("high_productview_rate");
+
+      if (s.totalIdleMs === 0 && sessionMinutes > 60)
+          s.fraudRules.push("impossible_no_idle_long_session");
+
+      // Deduplicate fraud rules to avoid inflated scores
+      const uniqueRules = [...new Set(s.fraudRules)];
+      const fraud_score = uniqueRules.length;
+      let fraud_level = "normal";
+      if (fraud_score >= 3) fraud_level = "fraud";
+      else if (fraud_score === 2) fraud_level = "suspicious";
+      else if (fraud_score === 1) fraud_level = "monitor";
+
+      if (fraud_score > 0) {
+        fraudBuffer.push({
+          sessionId: s.sessionId,
+          userId: s.visitorId,
+          fraud_score,
+          fraud_level,
+          rulesHit: uniqueRules,
+          startTime: new Date(s.startTime).toISOString().slice(0, 19).replace("T", " "),
+          endTime: new Date(ts).toISOString().slice(0, 19).replace("T", " ")
+        });
+      }
+
+      queueSessionFlush(s, ts);
+      sessions.delete(sid);
+  }
+
+
+}
+
+// -------------------------------------------------
+// MAIN CONSUMER START
+// -------------------------------------------------
+async function EndSessionConsumerStart() {
+  const redis = await getRedis();
+
+
+  const ACTIVE_POLL_INTERVAL_MS = 5000;
+
+  async function countActiveSessions() {
+    let cursor = "0";
+    let total = 0;
+
+    try {
+      do {
+        const reply = await redis.scan(
+          cursor,
+          "MATCH", "active:*",
+          "COUNT", "500"
+        );
+
+        cursor = reply.cursor;
+        total += reply.keys.length;
+
+      } while (cursor !== "0");
+
+      return total;
+    } catch (err) {
+      console.error("Error scanning Redis:", err);
+      return 0;
+    }
+  }
+
+  setInterval(async () => {
+    try {
+      const count = await countActiveSessions();
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+      activeCountBuffer.push({
+        count,
+        timestamp: now,
+        updated_at: now
+      });
+
+      if (activeCountBuffer.length >= ACTIVE_COUNT_BATCH) {
+        flushActiveCount().catch(err => {
+          console.error("❌ flushActiveCount error:", err);
+        });
+      }
+    } catch (err) {
+      console.error("❌ Active count poller error:", err);
+    }
+  }, ACTIVE_POLL_INTERVAL_MS);
+
+  // stop poller cleanly if process exiting
+// No-op: allow PM2 to stop workers safely
+  process.on("SIGINT", () => process.exit(0));
+  process.on("SIGTERM", () => process.exit(0));
+
+
+
+
+  // Clear old active sessions at boot
+  const keys = await redis.keys("active:*");
+  for (const k of keys) await redis.del(k);
+
+  console.log("Redis ready, Kafka starting...");
+
+  const kafka = new Kafka({ brokers: KAFKA_BROKERS });
+  const consumer = kafka.consumer({ groupId: KAFKA_GROUP_ID });
+
+  await consumer.connect();
+  await consumer.subscribe({ topic: TOPIC, fromBeginning: false });
+
+  await consumer.run({
+    eachMessage: async ({ message }) => {
+      try {
+        const ev = JSON.parse(message.value.toString());
+
+        const event = {
+          timestamp: ev.timestamp ?? Date.now(),
+          type: ev.type ?? ev.eventType ?? null,
+          userId: ev.userId ?? ev.visitorId ?? null,
+          sessionId: ev.sessionId ?? ev.sid ?? null,
+          url: ev.url ?? "",
+          action: ev.action ?? null
+        };
+
+        if (!event.sessionId || !event.type) return;
+
+        await handleEvent(event, redis);
+
+      } catch (err) {
+        console.error("❌ Error processing message:", err);
+      }
+    }
+  });
+}
+
+if (require.main === module) {
+  EndSessionConsumerStart().catch(err => {
+    console.error("Fatal consumer error:", err);
+    process.exit(1);
+  });
+}
+
+module.exports = { EndSessionConsumerStart };

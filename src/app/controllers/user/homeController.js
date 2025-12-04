@@ -4,9 +4,20 @@ const brand = require('../../models/brandModel')
 const user = require('../../models/userModel')
 const notification = require('../../models/notificationModel')
 const employee = require('../../models/employeeModel')
-const kafka = require("kafkajs").Kafka
-const kafkaClient = new kafka({ brokers: ["localhost:9092"] })
-const producer = kafkaClient.producer()
+
+///new kafka import ( a persistent broker service running)
+const { producer } = require("../../kafka/producer");
+
+
+////fabric
+const { EventHubProducerClient } = require("@azure/event-hubs");
+
+const eventHubProducer = new EventHubProducerClient(process.env.EVENTHUB_CONNECTION);
+const sessionState = new Map();
+///fabric
+
+
+
 
 class homeController {
   async getVouchers(req, res, next) {
@@ -154,19 +165,108 @@ class homeController {
   
   async streamingKafka(req, res, next) {
     try {
-      const { topic, value } = req.body
+      const { topic, value } = req.body;
 
-      // await producer.connect()
-      // await producer.send({
-      //   topic: topic,
-      //   messages: [{ value: JSON.stringify(value) }],
-      // })
+      // Get logged-in userId OR anonymous ID from frontend
+      const uid = req.cookies.uid || value.userId;
+
+      const enhancedValue = {
+        ...value,
+        userId: uid
+      };
+
+      await producer.send({
+        topic,
+        messages: [
+          {
+            value: JSON.stringify(enhancedValue),
+            key: uid, // partitions by user ID (same user → same partition)
+          }
+        ]
+      });
+
+      return res.json({ success: true });
 
     } catch (error) {
-      console.log(error)
-      return res.json({error: error.message})
+      console.log(error);
+      return res.json({ error: error.message });
     }
   }
+
+
+  async streamingFabric(req, res, next) {
+    try {
+      const { value } = req.body;
+
+      const uid = req.cookies.uid || value.userId;
+
+      const enhancedValue = {
+        ...value,
+        userId: uid
+      };
+
+      const sessionId = enhancedValue.sessionId;
+      const eventType = enhancedValue.type;
+
+      // -----------------------------------------
+      // 🧠 SESSION VALIDATION LOGIC (same as Kafka consumer)
+      // -----------------------------------------
+      if (!sessionId) {
+        // No session → ignore silently
+        return res.json({ success: true });
+      }
+
+      let state = sessionState.get(sessionId);
+
+      // Case 1: First time seeing this session
+      if (!state) {
+        if (eventType !== "page_view") {
+          // Ignore invalid start
+          return res.json({ success: true });
+        }
+
+        // Valid session start
+        state = { started: true, closed: false };
+        sessionState.set(sessionId, state);
+      }
+
+      // Case 2: If session is closed → ignore anything after page_exit
+      if (state.closed) {
+        return res.json({ success: true });
+      }
+
+      // Case 3: page_exit closes the session
+      if (eventType === "page_exit") {
+        state.closed = true;
+        sessionState.set(sessionId, state);
+      }
+
+      // -----------------------------------------
+      // 📤 SEND TO EVENTHUB (only valid events)
+      // -----------------------------------------
+      const batch = await eventHubProducer.createBatch();
+
+      const eventBody = {
+        ...enhancedValue,
+        action: enhancedValue.action ?? null,   // 👈 force null
+        _producerTimestamp: Date.now()
+      };
+
+      batch.tryAdd({
+        body: eventBody,
+        partitionKey: uid
+      });
+
+      await eventHubProducer.sendBatch(batch);
+
+      return res.json({ success: true });
+
+    } catch (error) {
+      console.error("EventHub error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
 
   async testCDC(req, res, next) {
     try {
@@ -179,5 +279,7 @@ class homeController {
       return res.json({message: error.message})
     }
   }
+
+  
 }
 module.exports = new homeController
