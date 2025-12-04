@@ -4,8 +4,13 @@ const homeController = require('../../app/controllers/admin/homeController')
 const homePermission = require('../../app/middleware/checkPermission').homeClass
 
 router.get('/', homePermission.read, homeController.show)
+router.get('/data/active-users'     , homePermission.read, homeController.getActiveUsersRealtime);
 
+router.post('/data/session-kpis'        , homeController.getSessionKPIs)
 router.post('/data/finance'             , homeController.getFinance)
+router.post('/data/finance/brand'       , homeController.getRevenueByBrand)
+router.post('/data/finance/category'    , homeController.getRevenueByCategory)
+router.post('/data/finance/subcategory' , homeController.getRevenueBySubcategory)
 router.post('/data/orders'              , homeController.getOrders)
 router.post('/data/customers'           , homeController.getCustomers)
 router.post('/data/purchases'           , homeController.getPurchases)

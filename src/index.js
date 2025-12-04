@@ -25,6 +25,26 @@ const { setTopSellingProducts } = require('./app/controllers/cron/setTopSellingP
 const { setNewArrivalProducts } = require('./app/controllers/cron/setNewArrivalProducts')
 const { resetStatusProducts } = require('./app/controllers/cron/resetStatusProducts')
 
+// ⭐ ADD THIS
+// const { initProducer } = require('./app/kafka/producer.js');
+
+// db.connect();
+
+// // ⭐ ADD THIS — connects once on server startup
+// initProducer();
+// console.log("Starting kafka producer...");
+
+// setTimeout(() => {
+//     console.log("This prints after 5 seconds");
+//     // Put the code you want to run later HERE
+// }, 5000);
+
+
+// const { startAllConsumers } = require('./app/kafka/RunAllConsumers');
+
+// startAllConsumers();
+
+
 db.connect()
 app.use(express.json({ limit: '50mb' }))
 /* app.use(express.static(path.join(__dirname, 'public'))) */
