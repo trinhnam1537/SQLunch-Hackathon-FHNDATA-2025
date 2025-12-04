@@ -7,4 +7,5 @@ TestCreateTopic.js
 Testproducer.js
 ANALYTICS_ARCHITECTURE.md
 venv/
-
+documents.pkl
+faiss_index.pkl
