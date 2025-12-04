@@ -122,7 +122,9 @@ class allOrdersController {
         await product.bulkWrite(bulkOps)
       }
 
-      if (req.body.status === 'delivered' && req.body.isPaid === 'true') {
+      console.log(req.body.status === 'delivered', req.body.isPaid === true)
+
+      if (req.body.status === 'delivered' && req.body.isPaid === true) {
         const orderInfo = await order.findOne({ _id: req.body.id }).lean()
         const userId = orderInfo.customerInfo.userId
 
@@ -145,10 +147,10 @@ class allOrdersController {
             await transporter.sendMail({
               from: adminEmail,
               to: userEmail,
-              subject: `Đơn hàng ${req.body.id} đã giao hàng thành công`, 
+              subject: `Order ${req.body.id} has delivered successfully`, 
               html: `
-                Bấm vào đây để xác nhận đơn hàng
-                <button><a target="_blank" rel="noopener noreferrer" href="http://localhost:3000/all-orders/order/done?id=${req.body.id}&email=${userEmail}">Đã nhận được hàng</a></button>
+                Please click here to confirm received your order
+                <button><a target="_blank" rel="noopener noreferrer" href="http://localhost:3000/all-orders/order/done?id=${req.body.id}&email=${userEmail}">Received order</a></button>
               `,
             })
           }

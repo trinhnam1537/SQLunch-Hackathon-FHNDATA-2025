@@ -83,7 +83,7 @@ app.set('view options', { layout: 'other' })
 // })
 
 async function main() {
-  await getUsersWithBirthdayThisMonth()
+  // await getUsersWithBirthdayThisMonth()
   // await setVoucherExpired()
   // await resetStatusProducts()
   // await setFlashDealProducts()
